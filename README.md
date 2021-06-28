@@ -2,9 +2,9 @@
 CSUREMM 2021 
 
 ## Team members		
--  
--  
--  
+-  Ketan Jog kj2473@columbia.edu
+-  Oliver Li al4143@columbia.edu
+-  Andrew Magid aam2302@columbia.edu
 
 ## Mentor
 - Joe Suk js5338@columbia.edu 
