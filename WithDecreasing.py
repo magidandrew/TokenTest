@@ -188,8 +188,7 @@ class SelfishMining:
         if self.__counter <= self.__nb_simulations:
             simulation_message = '\nSimulation ' + str(self.__counter) + ' out of ' + str(self.__nb_simulations) + '\n'
             current_stats = 'Private chain : ' + '+ ' * int(self.__privateChain) + '\n' \
-                                                                                   'public chain : ' + '+ ' * int(
-                self.__publicChain) + '\n'
+                            'public chain : ' + '+ ' * int(self.__publicChain) + '\n'
         else:
             simulation_message = '\n\n' + str(
                 self.__nb_simulations) + ' Simulations Done // publishing private chain if non-empty\n'
@@ -199,15 +198,11 @@ class SelfishMining:
 
         selfish_vs_honests_stats = \
             'Blocks validated by honest miners : ' + str(self.__honestValidBlocks) + '\n' \
-                                                                                     'Blocks validated by selfish miners : ' + str(
-                self.__selfishValidBlocks) + '\n' \
-                                             'Expected if they were honests : ' + str(
-                int(self.__alpha * self.__nb_simulations)) + '\n' \
-                                                             'Number of total blocks mined : ' + str(
-                self.__totalValidatedBlocks) + '\n' \
-                                               'Number of Orphan blocks : ' + str(self.__orphanBlocks) + '\n' \
-                                                                                                         'Revenue ratio = PoolBlocks / TotalBlocks : ' + str(
-                self.__revenueRatio) + '%\n'
+            'Blocks validated by selfish miners : ' + str(self.__selfishValidBlocks) + '\n' \
+            'Expected if they were honests : ' + str(int(self.__alpha * self.__nb_simulations)) + '\n' \
+            'Number of total blocks mined : ' + str(self.__totalValidatedBlocks) + '\n' \
+            'Number of Orphan blocks : ' + str(self.__orphanBlocks) + '\n' \
+            'Revenue ratio = PoolBlocks / TotalBlocks : ' + str(self.__revenueRatio) + '%\n'
 
         if self.__Sn0 is not None:
             considering_time_stats = \
@@ -224,24 +219,25 @@ class SelfishMining:
         return simulation_message + current_stats + choosen_parameters + selfish_vs_honests_stats + considering_time_stats
 
 
-if len(sys.argv) == 4:
-    dico = {'nb_simulations': int(sys.argv[1]), 'alpha': float(sys.argv[2]), 'gamma': float(sys.argv[3]),
-            'display': True}
-    new = SelfishMining(**dico)
-    new.simulate()
+if __name__ == "__main__":
+    if len(sys.argv) == 4:
+        dico = {'nb_simulations': int(sys.argv[1]), 'alpha': float(sys.argv[2]), 'gamma': float(sys.argv[3]),
+                'display': True}
+        new = SelfishMining(**dico)
+        new.simulate()
 
-if len(sys.argv) == 1:
-    ### TO SAVE MULTIPLE VALUES IN FILE ###
-    start = time.time()
-    alphas = list(i / 100 for i in range(1, 50, 1))  # range(1, 50, 1) | 50 => 0, 0.5, 0.01
-    gammas = list(i / 100 for i in range(1, 100, 5))  # range(1, 100, 1) | 100 => 0, 1, 0.01
-    count = 0  # pourcentage done
-    for alpha in alphas:
-        for gamma in gammas:
-            ## Before and after Difficulty Adjustment (whole time range)
-            new = SelfishMining(**{'nb_simulations': 150000, 'alpha': alpha, 'gamma': gamma, 'write': True})
-            new.simulate()
-        count += 1 / len(alphas)
-        print("progress :" + str(round(count, 2) * 100) + "%\n")
-    duration = time.time() - start
-    print("Tooks " + str(round(duration, 2)) + " seconds")
+    if len(sys.argv) == 1:
+        ### TO SAVE MULTIPLE VALUES IN FILE ###
+        start = time.time()
+        alphas = list(i / 100 for i in range(1, 50, 1))  # range(1, 50, 1) | 50 => 0, 0.5, 0.01
+        gammas = list(i / 100 for i in range(1, 100, 5))  # range(1, 100, 1) | 100 => 0, 1, 0.01
+        count = 0  # pourcentage done
+        for alpha in alphas:
+            for gamma in gammas:
+                ## Before and after Difficulty Adjustment (whole time range)
+                new = SelfishMining(**{'nb_simulations': 150000, 'alpha': alpha, 'gamma': gamma, 'write': True})
+                new.simulate()
+            count += 1 / len(alphas)
+            print("progress :" + str(round(count, 2) * 100) + "%\n")
+        duration = time.time() - start
+        print("Tooks " + str(round(duration, 2)) + " seconds")
