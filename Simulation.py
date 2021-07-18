@@ -61,11 +61,13 @@ class SelfishMining:
                 results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
 
                 self.__blockchain.add_block(Block(results['time']))
+
                 if results['winner'] == 'honest':
                     self.__honest_valid_blocks += 1
                 elif results['winner'] == 'selfish':
                     self.__delta += 1
                     self.__private_chain += 1
+
 
 
 
