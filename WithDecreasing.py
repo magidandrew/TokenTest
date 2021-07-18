@@ -151,7 +151,7 @@ class SelfishMining:
             # If there is a competition though (1-1) considering gamma,
             # (Reminder: gamma = ratio of honest miners who choose to mine on pool's block)
             # --> either it appends the private chain => 1 block for each competitor in RevenueRatio
-            # --> either it appends the honnest chain => 2 blocks for honnest miners (1 more then)
+            # --> either it appends the honest chain => 2 blocks for honnest miners (1 more then)
             s = random.uniform(0, 1)
             if self.__privateChain > 0 and s <= float(self.__gamma):
                 self.__selfishValidBlocks += 1
