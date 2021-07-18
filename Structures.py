@@ -43,7 +43,7 @@ class Blockchain:
     def __str__(self):
         output = []
         for i in range(len(self.chain)):
-            output.append("Block: {}".format(i))
+            output.append("Block: {}".format(i+1))
             output.append("*" * 40)
             output.append(self.chain[i].__str__())
             output.append("-" * 40)
