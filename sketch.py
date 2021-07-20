@@ -38,11 +38,13 @@ while(len(valid_chain) <= 2016):
             # remove entry from queue
             attack_queue.get()
 
-        elif attack_queue.qsize() > 1:
+        elif attack_queue.qsize() > 2:
             # with lead stubborn mining, we only push enough blocks to maintain a lead over the honest chain
             # this means either a two block addition or a one block addition
 
             # delta is attacker_queue.qsize() - valid_chain_from_branch.size()
+
+            valid_chain.add_block(attack_queue.get())
 
 
 
