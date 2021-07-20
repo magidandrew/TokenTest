@@ -23,10 +23,13 @@ while(len(valid_chain) <= 2016):
 
     winner = 'H' if h_mine_time < s_mine_time else 'S'
 
+    # If the honest miners win
     if winner == 'H':
         # check len of attack_queue
         if attack_queue.qsize() == 0:
-            valid_chain.add_block(Block(mining_time=h_mine_time))
+            new_timestamp = valid_chain.get_global_time_of_chain() + h_mine_time
+
+            valid_chain.add_block(Block(mining_time=h_mine_time, timestamp=new_timestamp))
 
         elif attack_queue.qsize() == 1:
             defector_agent = Agent(alpha = honest_agent.alpha*gamma) # Effectively (1 - alpha)*gamma
@@ -44,7 +47,21 @@ while(len(valid_chain) <= 2016):
 
             # delta is attacker_queue.qsize() - valid_chain_from_branch.size()
 
-            valid_chain.add_block(attack_queue.get())
+            # We push the TWO earliest blocks in the attack chain to the valid chain.
+            block1 = attack_queue.get()
+            block1.timestamp = valid_chain.get_global_time_of_chain() + h_mine_time
+
+            block2 = attack_queue.get()
+            block2.timestamp = valid_chain.get_global_time_of_chain() + h_mine_time
+
+            valid_chain.add_block(block1)
+            valid_chain.add_block(block2)
+
+    # If the selfish miners win
+    elif:
+        attack_queue.put(Block(mining_time=s_mine_time))
+
+
 
 
 

@@ -32,7 +32,7 @@ def get_block_time(alpha: float, difficulty: float, gamma: float = 0, _type: str
 
 # FIXME: CLEAN UP HOW ALL THESE PARAMETERS ARE PASSED IN
 def get_winner(alpha: float, gamma: float, difficulty: float, _type: tuple = ('honest', 'selfish')) -> dict:
-    results = {'time': None, 'winner': None}
+    results = {'time': None, 'winner': None, 'block' : None}
     honest_time = get_block_time(alpha, difficulty, gamma, 'honest')
     attacker_time = get_block_time(alpha, difficulty, gamma, 'selfish')
 
