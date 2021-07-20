@@ -35,4 +35,15 @@ while(len(valid_chain) <= 2016):
             # Decide who wins the fork contest and everyone switches mining on that block once its discovered
             results = get_winner(defector_agent, new_honest_agent, selfish_agent)
             valid_chain.add_block(results['block'])
+            # remove entry from queue
             attack_queue.get()
+
+        elif attack_queue.qsize() > 1:
+            # with lead stubborn mining, we only push enough blocks to maintain a lead over the honest chain
+            # this means either a two block addition or a one block addition
+
+            # delta is attacker_queue.qsize() - valid_chain_from_branch.size()
+
+
+
+
