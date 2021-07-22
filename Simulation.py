@@ -89,10 +89,11 @@ def main() -> None:
                         help="Type of mining method: ({})".format(", ".join(implemented_mining_techniques)))
     parser.add_argument('-d', action="store_true", help="Display stuff")
 
-    # args = parser.parse_args()
-    #
-    # if len(sys.argv) == 1:
-    #     parser.print_usage()
+
+    args = parser.parse_args()
+
+    if len(sys.argv) == 1:
+        parser.print_usage()
 
     a = SelfishMining(**{'nb_simulations': 10, 'alpha': .3, 'gamma': .2})
     a.simulate()
