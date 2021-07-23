@@ -13,11 +13,11 @@ class SelfishMining:
     def __init__(self, **kwargs):
         self.__nb_simulations = kwargs['nb_simulations']
         self.__delta = 0  # advance of selfish miners on honest ones
-        self.__private_chain = 0  # length of private chain RESET at each validation
-        self.__public_chain = 0  # length of public chain RESET at each validation
+        # self.__private_chain = 0  # length of private chain RESET at each validation
+        # self.__public_chain = 0  # length of public chain RESET at each validation
         self.__honest_valid_blocks = 0
         self.__selfish_valid_blocks = 0
-        self.__counter = 1
+        # self.__counter = 1
         self.__blocks_in_cur_window = 0
 
         self.__attack_queue = Queue()
@@ -28,23 +28,23 @@ class SelfishMining:
         self.__gamma = kwargs['gamma']
 
         # For Results
-        self.__revenue_ratio = None
-        self.__orphan_blocks = 0
-        self.__total_validated_blocks = 0
+        # self.__revenue_ratio = None
+        # self.__orphan_blocks = 0
+        # self.__total_validated_blocks = 0
 
         # For Rewards
         self.__honest_reward = 0
         self.__selfish_reward = 0
 
         # For difficulty adjustment
-        self.__Tho = 10
-        self.__n0 = 2016
+        # self.__Tho = 10
+        self.__window_size = 2016
         # self.__breaktime = None
-        self.__Sn0 = None
-        self.__B = 1
-        self.__current_timestamp = 0
-        self.__all_blocks_mined = []
-        self.__last_timestamp_changed = 0
+        # self.__Sn0 = None
+        # self.__B = 1
+        # self.__current_timestamp = 0
+        # self.__all_blocks_mined = []
+        # self.__last_timestamp_changed = 0
 
         # # Writing down results?
         # self.__write = d.get('write', False)
@@ -52,8 +52,8 @@ class SelfishMining:
         # self.__display = d.get('display', False)
 
     def simulate(self):
-        block_difficulty_periods = [self.__n0 for x in range(0, self.__nb_simulations // self.__n0)] \
-                          + [self.__nb_simulations % self.__n0]
+        block_difficulty_periods = [self.__window_size for x in range(0, self.__nb_simulations // self.__window_size)] \
+                          + [self.__nb_simulations % self.__window_size]
 
         # TODO: HOW ARE WE DETERMINING DIFFICULTY
         difficulty = .5
@@ -64,16 +64,16 @@ class SelfishMining:
                 # Find whether selfish-miner or honest-miner finds block first
                 results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
 
-                self.__blockchain.add_block(Block(results['time']))
-
-                if results['winner'] == 'honest':
+                if results['honest_win'] == True:
                     self.__honest_valid_blocks += 1
-                elif results['winner'] == 'selfish':
+                    self.__blockchain.add_block(Block(results['time']))
+                    self.__blocks_in_cur_window += 1
+                elif results['selfish_win'] == True:
                     self.__delta += 1
-                    self.__private_chain += 1
+                    self.__attack_queue.put(Block(results['time']))
 
-        print(self.__private_chain)
 
+        print(self.__blockchain)
 
         # FIXME: Figure out what the selfish miner does when validated blocks exceeds 2016 (does he publish or throw those away?)
         # FIXME: In this case, selfish miner will publish only his first block to potentially win the fork, and has to discard his subsequent blocks in his selfish chain
@@ -95,9 +95,9 @@ def main() -> None:
 
 
     # args = parser.parse_args()
-
-    if len(sys.argv) == 1:
-        parser.print_usage()
+    #
+    # if len(sys.argv) == 1:
+    #     parser.print_usage()
 
     a = SelfishMining(**{'nb_simulations': 10, 'alpha': .3, 'gamma': .2})
     a.simulate()

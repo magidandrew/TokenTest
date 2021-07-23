@@ -1,0 +1,19 @@
+honest and selfish miners mining blocks successfully and adding to chain, n = 10
+Work out fork conditions and summation/timekeeping problem // Try to finish this by mid afternoon...
+Clean up the simulation  variables... -> Selfish Mine class
+Create agent classes to encapsulate and oop the sim
+-------> win by EOD -> Only then can you drink.
+Add "winner" function to each agent subclass
+Make sim code work with agent classes.
+Write tests for the simulate class.s
+easily export this data to the visualizer script
+
+
+things to store:
+num of blocks orphaned
+num of blocks mined by selfish, honest miners
+selfish miners reward (#blocks*reward - computational_cost*time)
+
+
+
+

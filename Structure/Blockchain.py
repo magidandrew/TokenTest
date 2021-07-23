@@ -1,4 +1,4 @@
-from Block import Block
+from Structure.Block import Block
 
 
 class Blockchain:
