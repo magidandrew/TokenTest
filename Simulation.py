@@ -5,6 +5,7 @@ from queue import Queue
 from Structure.Block import Block
 from Structure.Blockchain import Blockchain
 import utils
+from Structure.SelfishAgent import SelfishAgent
 import logging
 
 
@@ -57,6 +58,13 @@ class SelfishMining:
 
         # TODO: HOW ARE WE DETERMINING DIFFICULTY
         difficulty = .5
+        selfish_agent = SelfishAgent(self.__alpha)
+
+        # TESTING PLAYGROUND
+        # for _ in range(75):
+        #     print(selfish_agent.get_block_time(difficulty))
+        # return
+        # END PLAYGROUND
 
         for window in block_difficulty_periods:
             # Only run till window filled up
@@ -64,11 +72,35 @@ class SelfishMining:
                 # Find whether selfish-miner or honest-miner finds block first
                 results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
 
-                if results['honest_win'] == True:
-                    self.__honest_valid_blocks += 1
-                    self.__blockchain.add_block(Block(results['time']))
-                    self.__blocks_in_cur_window += 1
-                elif results['selfish_win'] == True:
+                if results['winner'] == 'honest':
+                    # check if selfish miner has no blocks
+                    if self.__attack_queue.qsize() == 0:
+                        self.__honest_valid_blocks += 1
+                        self.__blockchain.add_block(Block(results['time']))
+                        self.__blocks_in_cur_window += 1
+
+                    # selfish miner has 1 block to fork
+                    elif self.__attack_queue.qsize() == 1:
+                        # perform the fork
+                        # TODO: DIFFICULTY MUST BE CHANGED DEPENDING ON WHETHER WE ARE AT 2015 BLOCKS (NEXT BLOCK WOULD
+                        # TODO: BE ADJUSTED FOR DIFFICULTY)
+                        fork_results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
+                        # winner takes the subsequent block
+                        if fork_results['winner'] == 'selfish':
+                            # add 2: the first is the mined block, the second is the fork win
+                            self.__blockchain.add_block(self.__attack_queue.get())
+                            self.__selfish_valid_blocks += 2
+                        # honest win
+                        else:
+                            self.__blockchain.add_block(Block(results['time']))
+                            self.__honest_valid_blocks += 2
+
+                        # shift this frame over 2 blocks
+                        self.__blocks_in_cur_window += 2
+                        self.__blockchain.add_block(Block(fork_results['time']))
+
+
+                elif results['winner'] == 'selfish':
                     self.__delta += 1
                     self.__attack_queue.put(Block(results['time']))
 
