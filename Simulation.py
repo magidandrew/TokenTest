@@ -1,7 +1,9 @@
 import argparse
 import sys
 import numpy as np
-from Structures import Block, Blockchain
+from queue import Queue
+from Structure.Block import Block
+from Structure.Blockchain import Blockchain
 import utils
 import logging
 
@@ -16,6 +18,9 @@ class SelfishMining:
         self.__honest_valid_blocks = 0
         self.__selfish_valid_blocks = 0
         self.__counter = 1
+        self.__blocks_in_cur_window = 0
+
+        self.__attack_queue = Queue()
         self.__blockchain = Blockchain()
 
         # Set Parameters
@@ -53,10 +58,9 @@ class SelfishMining:
         # TODO: HOW ARE WE DETERMINING DIFFICULTY
         difficulty = .5
 
-        # Each difficulty adjustment is a mining period
-        for blocks_in_window in block_difficulty_periods:
-            # Only run for the number of simulation steps in each window
-            for sim_step in range(blocks_in_window):
+        for window in block_difficulty_periods:
+            # Only run till window filled up
+            while self.__blocks_in_cur_window < window:
                 # Find whether selfish-miner or honest-miner finds block first
                 results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
 
@@ -68,7 +72,7 @@ class SelfishMining:
                     self.__delta += 1
                     self.__private_chain += 1
 
-
+        print(self.__private_chain)
 
 
         # FIXME: Figure out what the selfish miner does when validated blocks exceeds 2016 (does he publish or throw those away?)
@@ -90,14 +94,14 @@ def main() -> None:
     parser.add_argument('-d', action="store_true", help="Display stuff")
 
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
 
     if len(sys.argv) == 1:
         parser.print_usage()
 
     a = SelfishMining(**{'nb_simulations': 10, 'alpha': .3, 'gamma': .2})
     a.simulate()
-
+    print("Sim complete")
 
 if __name__ == "__main__":
     # logging.basicConfig(level=logging.DEBUG)
