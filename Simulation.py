@@ -54,7 +54,7 @@ class SelfishMining:
 
     def simulate(self):
         block_difficulty_periods = [self.__window_size for x in range(0, self.__nb_simulations // self.__window_size)] \
-                          + [self.__nb_simulations % self.__window_size]
+                                   + [self.__nb_simulations % self.__window_size]
 
         # TODO: HOW ARE WE DETERMINING DIFFICULTY
         difficulty = .5
@@ -69,6 +69,15 @@ class SelfishMining:
         for window in block_difficulty_periods:
             # Only run till window filled up
             while self.__blocks_in_cur_window < window:
+
+                # iterate over all selfish mined blocks in attack_queue to see if next mining time exceeds that
+                # of the next honest block
+                # ----POTENTIAL SOLUTION!!!!----
+                # THIS CAN BE DONE WITH A MINING QUEUE FOR EACH AGENT WITH THE ETA TIMESTAMP OF THE BLOCKS
+                # THERE IS A COMPARISON TO SEE WHICH IS WOULD BE DONE FIRST! UNDER SOME CONDITIONS, THE ENTIRE QUEUES
+                # WILL NEED TO BE CLEARED OUT IN WHICH CASE WE WILL GENERATE A WINNER (FOLLOWING THE CODE BELOW!)
+                # AHS - ALL HAIL SATOSHI
+
                 # Find whether selfish-miner or honest-miner finds block first
                 results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
 
@@ -78,33 +87,48 @@ class SelfishMining:
                         self.__honest_valid_blocks += 1
                         self.__blockchain.add_block(Block(results['time']))
                         self.__blocks_in_cur_window += 1
+                        logging.debug("honest win, selfish 0 blocks")
+                        logging.debug(self.__blockchain)
 
                     # selfish miner has 1 block to fork
                     elif self.__attack_queue.qsize() == 1:
+                        logging.debug("pre-fork blockchain:")
+                        logging.debug(self.__blockchain)
                         # perform the fork
                         # TODO: DIFFICULTY MUST BE CHANGED DEPENDING ON WHETHER WE ARE AT 2015 BLOCKS (NEXT BLOCK WOULD
                         # TODO: BE ADJUSTED FOR DIFFICULTY)
                         fork_results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
                         # winner takes the subsequent block
                         if fork_results['winner'] == 'selfish':
+                            logging.debug(f"selfish fork winner-->time: {fork_results['time']}")
                             # add 2: the first is the mined block, the second is the fork win
                             self.__blockchain.add_block(self.__attack_queue.get())
                             self.__selfish_valid_blocks += 2
                         # honest win
                         else:
+                            logging.debug(f"honest fork winner-->time: {fork_results['time']}")
                             self.__blockchain.add_block(Block(results['time']))
                             self.__honest_valid_blocks += 2
+
+                            # have honest miner forfeit his block
+                            self.__attack_queue.get()
 
                         # shift this frame over 2 blocks
                         self.__blocks_in_cur_window += 2
                         self.__blockchain.add_block(Block(fork_results['time']))
 
+                        logging.debug("post-fork blockchain:")
+                        logging.debug(self.__blockchain)
+
+                    # force selfish miner to push all blocks and establish win
+                    elif self.__attack_queue.qsize() == 2:
+                        pass
 
                 elif results['winner'] == 'selfish':
                     self.__delta += 1
                     self.__attack_queue.put(Block(results['time']))
 
-
+        print("---<SUMMARY>---")
         print(self.__blockchain)
 
         # FIXME: Figure out what the selfish miner does when validated blocks exceeds 2016 (does he publish or throw those away?)
@@ -125,16 +149,15 @@ def main() -> None:
                         help="Type of mining method: ({})".format(", ".join(implemented_mining_techniques)))
     parser.add_argument('-d', action="store_true", help="Display stuff")
 
-
     # args = parser.parse_args()
     #
     # if len(sys.argv) == 1:
     #     parser.print_usage()
-
     a = SelfishMining(**{'nb_simulations': 10, 'alpha': .3, 'gamma': .2})
     a.simulate()
     print("Sim complete")
 
+
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
     main()

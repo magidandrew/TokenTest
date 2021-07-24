@@ -8,3 +8,7 @@ class AbstractAgent(ABC):
     @abstractmethod
     def get_block_time(self, difficulty: float):
         pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
