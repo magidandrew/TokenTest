@@ -8,4 +8,5 @@ class SelfishAgent(AbstractAgent):
         return np.random.exponential(1 / self.alpha * difficulty_scaling)
 
     def __str__(self):
-        return ", ".join([f"alpha: {self.alpha}", f"type: {self.__class__.__name__}"])
+        return_val = [f"alpha: {self.alpha}", f"type: {self.__class__.__name__}"]
+        return ", ".join(return_val)
