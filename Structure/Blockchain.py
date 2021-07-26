@@ -34,10 +34,27 @@ class Blockchain:
         return len(self.chain)
 
     def __str__(self):
-        output = []
+        # FIXME: DEPENDS ON NUMBER OF PARAMETERS IN A BLOCK!
+        # FIXME: THIS IS SO MESSY....NEEDS TO BE CLEANED UP
+        block_num_arr = []
+        star_arr = []
+        mining_time_param_arr = []
+        timestamp_param_arr = []
+        winning_agent_param_arr = []
+        dashes_arr = []
         for i in range(len(self.chain)):
-            output.append("Block: {}".format(i+1))
-            output.append("*" * 40)
-            output.append(self.chain[i].__str__())
-            output.append("-" * 40)
-        return "\n".join(output)
+            block_num_arr.append("Block: {}".format(i+1).ljust(40))
+            star_arr.append("*" * 40)
+            mining_time_param_arr.append(self.chain[i].__str__().split('\n')[0].ljust(40))
+            timestamp_param_arr.append(self.chain[i].__str__().split('\n')[1].ljust(40))
+            winning_agent_param_arr.append(self.chain[i].__str__().split('\n')[2].ljust(40))
+            dashes_arr.append("-" * 40)
+
+        lines = [" ".join(block_num_arr), " ".join(star_arr), " ".join(mining_time_param_arr),
+                 " ".join(timestamp_param_arr), " ".join(winning_agent_param_arr), " ".join(dashes_arr)]
+
+        final_str = ""
+        for line in lines:
+            final_str += (line + '\n')
+        return final_str
+

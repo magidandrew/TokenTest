@@ -1,6 +1,6 @@
-from AbstractAgent import AbstractAgent
+from Structure.AbstractAgent import AbstractAgent
 # TODO: import the rest of the agents
-from SelfishAgent import SelfishAgent
+from Structure.SelfishAgent import SelfishAgent
 
 
 class Block:

@@ -86,6 +86,7 @@ class SelfishMining:
                     if self.__attack_queue.qsize() == 0:
                         self.__honest_valid_blocks += 1
                         self.__blockchain.add_block(Block(results['time']))
+                        # move window over
                         self.__blocks_in_cur_window += 1
                         logging.debug("honest win, selfish 0 blocks")
                         logging.debug(self.__blockchain)
@@ -115,6 +116,7 @@ class SelfishMining:
 
                         # shift this frame over 2 blocks
                         self.__blocks_in_cur_window += 2
+                        # FIXME: CONSIDER INCREMENTING BLOCKS IN WINDOW WITH THE ADD_BLOCK() FUNCTION?
                         self.__blockchain.add_block(Block(fork_results['time']))
 
                         logging.debug("post-fork blockchain:")
@@ -122,7 +124,11 @@ class SelfishMining:
 
                     # force selfish miner to push all blocks and establish win
                     elif self.__attack_queue.qsize() == 2:
-                        pass
+                        self.__blocks_in_cur_window += 2
+                        for _ in range(2):
+                            self.__blockchain.add_block(self.__attack_queue.get())
+                        logging.debug("selfish miner added 2 blocks")
+                        logging.debug(self.__blockchain)
 
                 elif results['winner'] == 'selfish':
                     self.__delta += 1
