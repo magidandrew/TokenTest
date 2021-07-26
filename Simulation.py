@@ -6,6 +6,7 @@ from Structure.Block import Block
 from Structure.Blockchain import Blockchain
 import utils
 from Structure.SelfishAgent import SelfishAgent
+from Structure.HonestAgent import HonestAgent
 import logging
 
 
@@ -59,6 +60,7 @@ class SelfishMining:
         # TODO: HOW ARE WE DETERMINING DIFFICULTY
         difficulty = .5
         selfish_agent = SelfishAgent(self.__alpha)
+        honest_agent = HonestAgent(self.__alpha)
 
         # TESTING PLAYGROUND
         # for _ in range(75):
@@ -77,6 +79,7 @@ class SelfishMining:
                 # THERE IS A COMPARISON TO SEE WHICH IS WOULD BE DONE FIRST! UNDER SOME CONDITIONS, THE ENTIRE QUEUES
                 # WILL NEED TO BE CLEARED OUT IN WHICH CASE WE WILL GENERATE A WINNER (FOLLOWING THE CODE BELOW!)
                 # AHS - ALL HAIL SATOSHI
+
 
                 # Find whether selfish-miner or honest-miner finds block first
                 results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
@@ -129,6 +132,12 @@ class SelfishMining:
                             self.__blockchain.add_block(self.__attack_queue.get())
                         logging.debug("selfish miner added 2 blocks")
                         logging.debug(self.__blockchain)
+
+
+                    # selfish miner publishes only one block and
+                    else:   # attack_queue.qsize() > 2:
+                        pass
+
 
                 elif results['winner'] == 'selfish':
                     self.__delta += 1

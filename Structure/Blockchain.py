@@ -45,6 +45,7 @@ class Blockchain:
         for i in range(len(self.chain)):
             block_num_arr.append("Block: {}".format(i+1).ljust(40))
             star_arr.append("*" * 40)
+            # magic index numbers should be removed
             mining_time_param_arr.append(self.chain[i].__str__().split('\n')[0].ljust(40))
             timestamp_param_arr.append(self.chain[i].__str__().split('\n')[1].ljust(40))
             winning_agent_param_arr.append(self.chain[i].__str__().split('\n')[2].ljust(40))
