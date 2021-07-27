@@ -1,4 +1,4 @@
-from Structure.AbstractAgent import AbstractAgent
+from Agents.AbstractAgent import AbstractAgent
 import numpy as np
 
 

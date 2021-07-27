@@ -1,14 +1,16 @@
-from Structure.AbstractAgent import AbstractAgent
+from Agents.AbstractAgent import AbstractAgent
 # TODO: import the rest of the agents
-from Structure.SelfishAgent import SelfishAgent
+from Agents.SelfishAgent import SelfishAgent
 
 
 class Block:
-    def __init__(self, mining_time: float = 0, winning_agent: AbstractAgent = None):
+    def __init__(self, timestamp_of_last_block: float, mining_time: float = 0, winning_agent: AbstractAgent = None):
         # time it took to mine the block
         self.mining_time: float = mining_time
         # timestamp is calculated when a block is added to the chain
         self.timestamp: float = 0
+        # global timestamp at which point a block is expected to be mined at
+        self.estimated_timestamp: float = timestamp_of_last_block + mining_time
         # Agent that won the block
         self.winning_agent: AbstractAgent = winning_agent
 

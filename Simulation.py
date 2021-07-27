@@ -5,8 +5,8 @@ from queue import Queue
 from Structure.Block import Block
 from Structure.Blockchain import Blockchain
 import utils
-from Structure.SelfishAgent import SelfishAgent
-from Structure.HonestAgent import HonestAgent
+from Agents.SelfishAgent import SelfishAgent
+from Agents.HonestAgent import HonestAgent
 import logging
 
 
