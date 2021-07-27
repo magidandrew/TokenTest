@@ -60,7 +60,7 @@ class SelfishMining:
         # TODO: HOW ARE WE DETERMINING DIFFICULTY
         difficulty = .5
         selfish_agent = SelfishAgent(self.__alpha)
-        honest_agent = HonestAgent(self.__alpha)
+        honest_agent = HonestAgent(1 - self.__alpha)
 
         # TESTING PLAYGROUND
         # for _ in range(75):
@@ -82,9 +82,9 @@ class SelfishMining:
 
 
                 # Find whether selfish-miner or honest-miner finds block first
-                results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
+                results = utils.get_winner(SelfishAgent, HonestAgent, gamma=self.__gamma, difficulty=difficulty)
 
-                if results['winner'] == 'honest':
+                if results['type'] == 'honest':
                     # check if selfish miner has no blocks
                     if self.__attack_queue.qsize() == 0:
                         self.__honest_valid_blocks += 1
@@ -139,7 +139,7 @@ class SelfishMining:
                         pass
 
 
-                elif results['winner'] == 'selfish':
+                elif results['type'] == 'selfish':
                     self.__delta += 1
                     self.__attack_queue.put(Block(results['time']))
 

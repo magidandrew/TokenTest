@@ -52,3 +52,15 @@ def get_winner(alpha: float, gamma: float, difficulty: float, _type: tuple = ('h
         results['winner'] = random.choice(['selfish', 'honest'])
         logging.debug("honest time and attacker_time equivalent")
     return results
+
+
+def get_winner(gamma: float, difficulty: float, *agents) -> dict:
+    results = {'time': None, 'winner': None, 'block': None, 'type' : None}
+    attack_times = {}
+    for agent in agents:
+        attack_times[agent.get_type()] = agent.get_block_time(difficulty)
+
+    results['winner'], results['time'] = min(attack_times.items(), key=lambda x: x[1])
+    results['type'] = results['winner'].split('_')[0]
+    
+    return results
