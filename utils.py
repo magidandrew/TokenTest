@@ -29,7 +29,7 @@ def get_block_time(alpha: float, difficulty: float, gamma: float = 0, _type: str
     elif _type == 'honest_fork':
         return np.random.exponential(1 / ((1 - alpha)(1 - gamma)) * difficulty_scaling)
 
-
+'''
 # FIXME: CLEAN UP HOW ALL THESE PARAMETERS ARE PASSED IN
 def get_winner(alpha: float, gamma: float, difficulty: float, _type: tuple = ('honest', 'selfish')) -> dict:
     results = {'time': None, 'winner': None, 'block': None}
@@ -51,4 +51,26 @@ def get_winner(alpha: float, gamma: float, difficulty: float, _type: tuple = ('h
         results['time'] = attacker_time
         results['winner'] = random.choice(['selfish', 'honest'])
         logging.debug("honest time and attacker_time equivalent")
+    return results
+'''
+
+def get_winner(gamma: float, difficulty: float, *agents) -> dict:
+    results = {'time': None, 'winner': None, 'block': None, 'type' : None}
+    attack_times = {}
+
+    def _is_active(agent):
+        if agent.type() == 'smart':
+            if agent.is_mining == False:
+                return False
+        return True
+
+    for agent in agents:
+        if _is_active(agent):
+            attack_times[agent.get_type()] = agent.get_block_time(difficulty)
+        else:
+            attack_times[agent.get_type()] = 100000
+
+    results['winner'], results['time'] = min(attack_times.items(), key=lambda x: x[1])
+    results['type'] = results['winner'].split('_')[0]
+    
     return results

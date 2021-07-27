@@ -1,3 +1,4 @@
+from Structure.SmartAgent import SmartAgent
 import argparse
 import sys
 import numpy as np
@@ -53,14 +54,27 @@ class SelfishMining:
         # # Display to console results?
         # self.__display = d.get('display', False)
 
+        self.__difficulty = 1
+
+    def set_difficulty(self):
+        time_taken = self.__blockchain.get_global_time_of_chain()
+
+        if not time_taken:
+            self.__difficulty = 1
+        
+        else:
+            self.__difficulty = self.__difficulty * (time_taken / 20160)
+
     def simulate(self):
+
         block_difficulty_periods = [self.__window_size for x in range(0, self.__nb_simulations // self.__window_size)] \
                                    + [self.__nb_simulations % self.__window_size]
 
         # TODO: HOW ARE WE DETERMINING DIFFICULTY
-        difficulty = .5
+        difficulty = self.__difficulty
         selfish_agent = SelfishAgent(self.__alpha)
-        honest_agent = HonestAgent(self.__alpha)
+        honest_agent = HonestAgent(1 - self.__alpha)
+        smart_agent = SmartAgent(self.__alpha)
 
         # TESTING PLAYGROUND
         # for _ in range(75):
@@ -69,6 +83,15 @@ class SelfishMining:
         # END PLAYGROUND
 
         for window in block_difficulty_periods:
+            
+            #Set the difficulty for this period:
+            prev_difficulty = self.__difficulty
+            self.set_difficulty()
+            
+            #Disable smart agent if the difficulty increases
+            if prev_difficulty < self.__difficulty:
+                smart_agent.is_mining = False
+
             # Only run till window filled up
             while self.__blocks_in_cur_window < window:
 
@@ -82,9 +105,10 @@ class SelfishMining:
 
 
                 # Find whether selfish-miner or honest-miner finds block first
-                results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
+                results = utils.get_winner(selfish_agent, honest_agent, gamma=self.__gamma, difficulty=difficulty)
 
-                if results['winner'] == 'honest':
+                if results['type'] == 'honest' or results['type'] == 'smart':
+
                     # check if selfish miner has no blocks
                     if self.__attack_queue.qsize() == 0:
                         self.__honest_valid_blocks += 1
@@ -139,7 +163,7 @@ class SelfishMining:
                         pass
 
 
-                elif results['winner'] == 'selfish':
+                elif results['type'] == 'selfish':
                     self.__delta += 1
                     self.__attack_queue.put(Block(results['time']))
 
