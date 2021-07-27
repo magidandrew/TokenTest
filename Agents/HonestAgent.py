@@ -6,7 +6,7 @@ class HonestAgent(AbstractAgent):
 
     def __init__(self, alpha: float):
         super().__init__(alpha)
-        self.id = super().counter + 1
+        self.id = super().counter
         self.type = "honest"
 
     def get_block_time(self, difficulty: float) -> float:

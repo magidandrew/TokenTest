@@ -5,7 +5,7 @@ import numpy as np
 class SelfishAgent(AbstractAgent):
     def __init__(self, alpha: float):
         super().__init__(alpha)
-        self.id = super().counter + 1
+        self.id = super().counter
         self.type = "selfish"
 
     def get_block_time(self, difficulty: float) -> float:

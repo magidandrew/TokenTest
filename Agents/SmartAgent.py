@@ -7,7 +7,7 @@ class SmartAgent(AbstractAgent):
     def __init__(self, alpha: float, is_mining: bool):
         super().__init__(alpha)
         self.is_mining = True
-        self.id = super().counter + 1
+        self.id = super().counter
         self.type = "smart"
 
 
