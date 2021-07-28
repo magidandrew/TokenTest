@@ -16,4 +16,16 @@ selfish miners reward (#blocks*reward - computational_cost*time)
 
 
 
+Simulation high-level overview:
+keep starting window block and ending window block vars..
+
+while len(valid-chai)<2016:
+    get next block from deque
+    transmit_to_all_agents
+    receive_from_all_agents (they send pp-size and alterations to valid chain len)
+    ...
+    need logic for forks and longest chain
+
+
+
 

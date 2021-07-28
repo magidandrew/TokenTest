@@ -1,4 +1,4 @@
-from Structure.SmartAgent import SmartAgent
+# from Structure.SmartAgent import SmartAgent
 import argparse
 import sys
 import numpy as np
@@ -8,6 +8,8 @@ from Structure.Blockchain import Blockchain
 import utils
 from Agents.SelfishAgent import SelfishAgent
 from Agents.HonestAgent import HonestAgent
+from Agents.SmartAgent import SmartAgent
+from Structure.DequeOfTimes import DequeOfTimes
 import logging
 
 
@@ -61,7 +63,7 @@ class SelfishMining:
 
         if not time_taken:
             self.__difficulty = 1
-        
+
         else:
             self.__difficulty = self.__difficulty * (time_taken / 20160)
 
@@ -74,7 +76,7 @@ class SelfishMining:
         difficulty = self.__difficulty
         selfish_agent = SelfishAgent(self.__alpha)
         honest_agent = HonestAgent(1 - self.__alpha)
-        smart_agent = SmartAgent(self.__alpha)
+        smart_agent = SmartAgent(self.__alpha, is_mining=True)
 
         # TESTING PLAYGROUND
         # for _ in range(75):
@@ -83,12 +85,12 @@ class SelfishMining:
         # END PLAYGROUND
 
         for window in block_difficulty_periods:
-            
-            #Set the difficulty for this period:
+
+            # Set the difficulty for this period:
             prev_difficulty = self.__difficulty
             self.set_difficulty()
-            
-            #Disable smart agent if the difficulty increases
+
+            # Disable smart agent if the difficulty increases
             if prev_difficulty < self.__difficulty:
                 smart_agent.is_mining = False
 
@@ -102,7 +104,6 @@ class SelfishMining:
                 # THERE IS A COMPARISON TO SEE WHICH IS WOULD BE DONE FIRST! UNDER SOME CONDITIONS, THE ENTIRE QUEUES
                 # WILL NEED TO BE CLEARED OUT IN WHICH CASE WE WILL GENERATE A WINNER (FOLLOWING THE CODE BELOW!)
                 # AHS - ALL HAIL SATOSHI
-
 
                 # Find whether selfish-miner or honest-miner finds block first
                 results = utils.get_winner(selfish_agent, honest_agent, gamma=self.__gamma, difficulty=difficulty)
@@ -159,7 +160,7 @@ class SelfishMining:
 
 
                     # selfish miner publishes only one block and
-                    else:   # attack_queue.qsize() > 2:
+                    else:  # attack_queue.qsize() > 2:
                         pass
 
 
