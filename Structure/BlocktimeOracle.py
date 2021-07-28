@@ -8,7 +8,7 @@ from Agents.SmartAgent import SmartAgent
 from collections import deque
 
 
-class DequeOfTimes:
+class BlocktimeOracle:
     INIT_SIZE = 100
 
     def __init__(self, *agents: AbstractAgent, difficulty):
@@ -24,7 +24,7 @@ class DequeOfTimes:
         # Iterate over each agent and create mining times
         for agent in self.agents:
             # Starts generating times after the current global time
-            agent_times = [agent.get_block_time(self.difficulty) for _ in range(DequeOfTimes.INIT_SIZE)]
+            agent_times = [agent.get_block_time(self.difficulty) for _ in range(BlocktimeOracle.INIT_SIZE)]
             # Get the cumulative sums
             agent_times = np.cumsum(agent_times)
 
@@ -42,7 +42,7 @@ class DequeOfTimes:
         all_times_arr.sort(key=lambda x: x[1])
 
         # We want INIT_SIZE number of block times.
-        all_times_arr = all_times_arr[:DequeOfTimes.INIT_SIZE]
+        all_times_arr = all_times_arr[:BlocktimeOracle.INIT_SIZE]
 
         self.allTimes = deque(all_times_arr)
 
@@ -56,7 +56,7 @@ class DequeOfTimes:
     def fork_next_time(self) -> (AbstractAgent, float):
         self.allTimes.clear()
         self.next_time()
-        
+
     def reset(self) -> (AbstractAgent, float):
         self.allTimes.clear()
 
@@ -73,6 +73,6 @@ class DequeOfTimes:
 
 
 if __name__ == "__main__":
-    test_deque = DequeOfTimes(SelfishAgent(.3), HonestAgent(.7), difficulty=.4)
+    test_deque = BlocktimeOracle(SelfishAgent(.3), HonestAgent(.7), difficulty=.4)
     for _ in range(10):
         print(test_deque.next_time())

@@ -6,55 +6,66 @@ from queue import Queue
 from Structure.Block import Block
 from Structure.Blockchain import Blockchain
 import utils
+from Agents.AbstractAgent import AbstractAgent
 from Agents.SelfishAgent import SelfishAgent
 from Agents.HonestAgent import HonestAgent
 from Agents.SmartAgent import SmartAgent
-from Structure.DequeOfTimes import DequeOfTimes
+from Structure.BlocktimeOracle import BlocktimeOracle
 import logging
+
+
+class Simulator:
+    def __init__(self, **kwargs):
+        self.number_of_periods: int = kwargs['number_of_periods']
+        self.agents: list[AbstractAgent] = kwargs['agents']
+
+        self.WINDOW_SIZE: int = kwargs['window_size']
+        self.TIME_PER_BLOCK: float = kwargs['minetime_per_block']
+        self.difficulty: float = kwargs['difficulty']
+
+        self.blockchain: Blockchain = Blockchain()
+        self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(difficulty=self.difficulty)
+
+
+    def transmit_blocks_to_all_agents(self, blocks: list[Block]) -> None:
+        for agent in self.agents:
+            agent.receive_blocks(blocks)
+
+    # pp-size: private progression size
+    # TODO: Fork conditions....look at all instruction tuples, and if theres no unique max
+    # return val: tuple(agent, pp-size, valid chain length adjustment)
+    def receive_from_all_agents(self) -> tuple[AbstractAgent, int, int]:
+        # TODO: compute all instructions and also process forks.
+        received_blocks = []
+        for agent in self.agents:
+            # (agent and transmitted blocks)
+            received_blocks.append((agent, agent.transmit_ppsize()))
+
+    def execute_instruction(self, agent: AbstractAgent): -> None:
+    # TODO: append the appropriate block to the blockchain. Return its state to all the agents.
+
 
 
 class SelfishMining:
     # TODO: these values can be implemented in an abstract class if it makes sense and is easier
     def __init__(self, **kwargs):
-        self.__nb_simulations = kwargs['nb_simulations']
-        self.__delta = 0  # advance of selfish miners on honest ones
-        # self.__private_chain = 0  # length of private chain RESET at each validation
-        # self.__public_chain = 0  # length of public chain RESET at each validation
-        self.__honest_valid_blocks = 0
-        self.__selfish_valid_blocks = 0
-        # self.__counter = 1
         self.__blocks_in_cur_window = 0
 
         self.__attack_queue = Queue()
         self.__blockchain = Blockchain()
 
+        self.block_time_oracle = BlocktimeOracle(difficulty=self.__difficulty)
+
         # Set Parameters
         self.__alpha = kwargs['alpha']
         self.__gamma = kwargs['gamma']
-
-        # For Results
-        # self.__revenue_ratio = None
-        # self.__orphan_blocks = 0
-        # self.__total_validated_blocks = 0
 
         # For Rewards
         self.__honest_reward = 0
         self.__selfish_reward = 0
 
         # For difficulty adjustment
-        # self.__Tho = 10
         self.__window_size = 2016
-        # self.__breaktime = None
-        # self.__Sn0 = None
-        # self.__B = 1
-        # self.__current_timestamp = 0
-        # self.__all_blocks_mined = []
-        # self.__last_timestamp_changed = 0
-
-        # # Writing down results?
-        # self.__write = d.get('write', False)
-        # # Display to console results?
-        # self.__display = d.get('display', False)
 
         self.__difficulty = 1
 
@@ -97,13 +108,14 @@ class SelfishMining:
             # Only run till window filled up
             while self.__blocks_in_cur_window < window:
 
-                # iterate over all selfish mined blocks in attack_queue to see if next mining time exceeds that
-                # of the next honest block
-                # ----POTENTIAL SOLUTION!!!!----
-                # THIS CAN BE DONE WITH A MINING QUEUE FOR EACH AGENT WITH THE ETA TIMESTAMP OF THE BLOCKS
-                # THERE IS A COMPARISON TO SEE WHICH IS WOULD BE DONE FIRST! UNDER SOME CONDITIONS, THE ENTIRE QUEUES
-                # WILL NEED TO BE CLEARED OUT IN WHICH CASE WE WILL GENERATE A WINNER (FOLLOWING THE CODE BELOW!)
-                # AHS - ALL HAIL SATOSHI
+                # ---PSEUDOCODE----
+                    next_block = self.block_time_oracle.next_time()
+
+
+
+
+
+                # ---END PSEUDOCODE---
 
                 # Find whether selfish-miner or honest-miner finds block first
                 results = utils.get_winner(selfish_agent, honest_agent, gamma=self.__gamma, difficulty=difficulty)
