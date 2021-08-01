@@ -26,16 +26,17 @@ class Simulator:
         self.blockchain: Blockchain = Blockchain()
         self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(difficulty=self.difficulty)
 
-    def transmit_blocks_to_all_agents(self, blocks: list[Block]) -> None:
+    def transmit_block_to_all_agents(self, block: Block) -> None:
         for agent in self.agents:
             agent.receive_blocks(blocks)
 
     # pp_size: private progression size
     # TODO: Fork conditions....look at all instruction tuples, and if theres no unique max
     # return val: tuple(agent, pp_size, valid chain length adjustment)
-    def receive_from_all_agents(self) -> tuple[AbstractAgent, int, int]:
+    def receive_from_all_agents(self, transmitted_block: Block) -> tuple[AbstractAgent, int, int]:
         # TODO: compute all instructions and also process forks.
         POSITION_OF_LEN = 1
+        POSITION_OF_AGENT = 0
         received_blocks = []
 
         # only largest pp_size gets accepted
@@ -54,7 +55,7 @@ class Simulator:
             raise Exception(f"invalid num of blocks ({len(max_blocks)} blocks) received from agents")
         # one winner established
         elif len(max_blocks) == 1:
-            self.blockchain.add_block()  # TODO: figure out how this will be passed in
+            self.blockchain.add_block(Block(mining_timestamp=transmitted_block.mining_time, timestamp_of_last_block=self.blockchain.get_global_time_of_chain(), winning_agent=max_blocks[0][POSITION_OF_AGENT]))  # TODO: figure out how this will be passed in
         # here we fork with the winners
         else:
             # TODO: implement this stuff
@@ -72,15 +73,15 @@ class Simulator:
         while len(self.blockchain) < self.WINDOW_SIZE:
             winning_agent, mining_time = self.blocktime_oracle.next_time()
 
-            transmission = [Block(mining_timestamp=mining_time, timestamp_of_last_block=self.blockchain.get_global_time_of_chain(), winning_agent=winning_agent)]
-            self.transmit_blocks_to_all_agents(transmission)
+            transmission = Block(mining_timestamp=mining_time, timestamp_of_last_block=self.blockchain.get_global_time_of_chain(), winning_agent=winning_agent)
+            self.transmit_block_to_all_agents(transmission)
 
-            winning_agent, pp_size, length_adjustment = self.receive_from_all_agents()
+            winning_agent, pp_size, length_adjustment = self.receive_from_all_agents(transmission)
 
             self.execute_instruction(winning_agent, pp_size, length_adjustment)
 
             self.reset_agents()
-            
+
 
 
 
