@@ -12,11 +12,11 @@ def get_block_time(alpha: float, difficulty: float, gamma: float = 0, _type: str
     'honest_fork' : remaining honest miners after defectors leave
     """
     # difficulty cannot be 0
-    assert(difficulty != 0)
+    assert (difficulty != 0)
     # selfish miners cannot have entire hashpower
-    assert(alpha != 1)
+    assert (alpha != 1)
     # selfish miners cannot have all honest miners mining on their chain
-    assert(gamma != 1)
+    assert (gamma != 1)
 
     difficulty_scaling = 10 / difficulty
 
@@ -28,6 +28,7 @@ def get_block_time(alpha: float, difficulty: float, gamma: float = 0, _type: str
         return np.random.exponential(1 / ((1 - alpha) * gamma) * difficulty_scaling)
     elif _type == 'honest_fork':
         return np.random.exponential(1 / ((1 - alpha)(1 - gamma)) * difficulty_scaling)
+
 
 '''
 # FIXME: CLEAN UP HOW ALL THESE PARAMETERS ARE PASSED IN
@@ -54,8 +55,9 @@ def get_winner(alpha: float, gamma: float, difficulty: float, _type: tuple = ('h
     return results
 '''
 
+
 def get_winner(gamma: float, difficulty: float, *agents) -> dict:
-    results = {'time': None, 'winner': None, 'block': None, 'type' : None}
+    results = {'time': None, 'winner': None, 'block': None, 'type': None}
     attack_times = {}
 
     def _is_active(agent):
@@ -72,5 +74,5 @@ def get_winner(gamma: float, difficulty: float, *agents) -> dict:
 
     results['winner'], results['time'] = min(attack_times.items(), key=lambda x: x[1])
     results['type'] = results['winner'].split('_')[0]
-    
+
     return results

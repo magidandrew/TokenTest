@@ -14,11 +14,12 @@ class BlocktimeOracle:
     def __init__(self, *agents: AbstractAgent, difficulty):
         self.difficulty: float = difficulty
         self.agents = agents
-        self.__current_time = 0.0
+        # TODO: Do we actually need this?
+        # self.__current_time = 0.0
 
         self.extend()
 
-    def extend(self):
+    def extend(self, fork_delta: float = 0.0):
         all_times_arr = []
 
         # Iterate over each agent and create mining times
@@ -29,7 +30,8 @@ class BlocktimeOracle:
             agent_times = np.cumsum(agent_times)
 
             # Start the times from when we last left off
-            agent_times = agent_times + self.__current_time
+            # agent_times = agent_times + self.__current_time
+            agent_times = agent_times + fork_delta
 
             # Mark each time with the agent that created it
             # DEBUG
@@ -55,10 +57,34 @@ class BlocktimeOracle:
     # scrap the entire existing deque and generate a new deque
     def fork_next_time(self) -> (AbstractAgent, float):
         self.allTimes.clear()
-        self.next_time()
+
+        # results = {'time': None, 'winner': None, 'block': None, 'type': None}
+        # attack_times = {}
+
+        def _is_active(agent: AbstractAgent):
+            # FIXME: this should be cleaner (whether a method of abstract class or a __name__ implementation)
+            if agent.get_type().split("_")[0] == 'smart':
+                if not agent.is_mining:
+                    return False
+            return True
+
+        # TODO: what does this do?
+        # for agent in self.agents:
+        #     if _is_active(agent):
+        #         attack_times[agent.get_type()] = agent.get_block_time(difficulty)
+        #     else:
+        #         attack_times[agent.get_type()] = 100000
+        #
+        # results['winner'], results['time'] = min(attack_times.items(), key=lambda x: x[1])
+        # results['type'] = results['winner'].split('_')[0]
+        #
+        # return results
+        winning_time: float = 0  # ?? Some value?
+        self.extend(fork_delta=winning_time)
 
     def reset(self) -> (AbstractAgent, float):
         self.allTimes.clear()
+        self.extend()
 
     def __is_empty(self) -> bool:
         return True if len(self.allTimes) == 0 else False

@@ -26,24 +26,43 @@ class Simulator:
         self.blockchain: Blockchain = Blockchain()
         self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(difficulty=self.difficulty)
 
-
     def transmit_blocks_to_all_agents(self, blocks: list[Block]) -> None:
         for agent in self.agents:
             agent.receive_blocks(blocks)
 
-    # pp-size: private progression size
+    # pp_size: private progression size
     # TODO: Fork conditions....look at all instruction tuples, and if theres no unique max
-    # return val: tuple(agent, pp-size, valid chain length adjustment)
+    # return val: tuple(agent, pp_size, valid chain length adjustment)
     def receive_from_all_agents(self) -> tuple[AbstractAgent, int, int]:
         # TODO: compute all instructions and also process forks.
+        POSITION_OF_LEN = 1
         received_blocks = []
+
+        # only largest pp_size gets accepted
         for agent in self.agents:
             # (agent and transmitted blocks)
-            received_blocks.append((agent, agent.transmit_ppsize()))
+            # TODO: transmit actual chain instead of just the size? (to keep timestamps)
+            received_blocks.append((agent, agent.transmit_ppsize(), agent.length_adjustment()))
 
-    def execute_instruction(self, agent: AbstractAgent): -> None:
-    # TODO: append the appropriate block to the blockchain. Return its state to all the agents.
+        # find pp_size maxes
+        # structure: [ (agent, [block1, block2, ..., block_n], 3), ..., (agent, [block1, block2], 2)]
+        max_len = max(received_blocks, key=lambda x: len(x[POSITION_OF_LEN]))  # len of transmitted blocks is pp_size
+        max_blocks = [x for x in received_blocks if len(x[POSITION_OF_LEN]) == max_len[POSITION_OF_LEN]]
 
+        # < 1 for completeness
+        if len(max_blocks) < 1:
+            raise Exception(f"invalid num of blocks ({len(max_blocks)} blocks) received from agents")
+        # one winner established
+        elif len(max_blocks) == 1:
+            self.blockchain.add_block()  # TODO: figure out how this will be passed in
+        # here we fork with the winners
+        else:
+            # TODO: implement this stuff
+            pass
+
+    def execute_instruction(self, agent: AbstractAgent) -> None:
+        # TODO: append the appropriate block to the blockchain. Return its state to all the agents.
+        pass
 
 
 class SelfishMining:
@@ -107,85 +126,80 @@ class SelfishMining:
 
             # Only run till window filled up
             while self.__blocks_in_cur_window < window:
-
                 # ---PSEUDOCODE----
-                    next_block = self.block_time_oracle.next_time()
-
-
-
-
+                next_block = self.block_time_oracle.next_time()
 
                 # ---END PSEUDOCODE---
 
                 # Find whether selfish-miner or honest-miner finds block first
-                results = utils.get_winner(selfish_agent, honest_agent, gamma=self.__gamma, difficulty=difficulty)
+            results = utils.get_winner(selfish_agent, honest_agent, gamma=self.__gamma, difficulty=difficulty)
 
-                if results['type'] == 'honest' or results['type'] == 'smart':
+            if results['type'] == 'honest' or results['type'] == 'smart':
 
-                    # check if selfish miner has no blocks
-                    if self.__attack_queue.qsize() == 0:
-                        self.__honest_valid_blocks += 1
+                # check if selfish miner has no blocks
+                if self.__attack_queue.qsize() == 0:
+                    self.__honest_valid_blocks += 1
+                    self.__blockchain.add_block(Block(results['time']))
+                    # move window over
+                    self.__blocks_in_cur_window += 1
+                    logging.debug("honest win, selfish 0 blocks")
+                    logging.debug(self.__blockchain)
+
+                # selfish miner has 1 block to fork
+                elif self.__attack_queue.qsize() == 1:
+                    logging.debug("pre-fork blockchain:")
+                    logging.debug(self.__blockchain)
+                    # perform the fork
+                    # TODO: DIFFICULTY MUST BE CHANGED DEPENDING ON WHETHER WE ARE AT 2015 BLOCKS (NEXT BLOCK WOULD
+                    # TODO: BE ADJUSTED FOR DIFFICULTY)
+                    fork_results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
+                    # winner takes the subsequent block
+                    if fork_results['winner'] == 'selfish':
+                        logging.debug(f"selfish fork winner-->time: {fork_results['time']}")
+                        # add 2: the first is the mined block, the second is the fork win
+                        self.__blockchain.add_block(self.__attack_queue.get())
+                        self.__selfish_valid_blocks += 2
+                    # honest win
+                    else:
+                        logging.debug(f"honest fork winner-->time: {fork_results['time']}")
                         self.__blockchain.add_block(Block(results['time']))
-                        # move window over
-                        self.__blocks_in_cur_window += 1
-                        logging.debug("honest win, selfish 0 blocks")
-                        logging.debug(self.__blockchain)
+                        self.__honest_valid_blocks += 2
 
-                    # selfish miner has 1 block to fork
-                    elif self.__attack_queue.qsize() == 1:
-                        logging.debug("pre-fork blockchain:")
-                        logging.debug(self.__blockchain)
-                        # perform the fork
-                        # TODO: DIFFICULTY MUST BE CHANGED DEPENDING ON WHETHER WE ARE AT 2015 BLOCKS (NEXT BLOCK WOULD
-                        # TODO: BE ADJUSTED FOR DIFFICULTY)
-                        fork_results = utils.get_winner(alpha=self.__alpha, gamma=self.__gamma, difficulty=difficulty)
-                        # winner takes the subsequent block
-                        if fork_results['winner'] == 'selfish':
-                            logging.debug(f"selfish fork winner-->time: {fork_results['time']}")
-                            # add 2: the first is the mined block, the second is the fork win
-                            self.__blockchain.add_block(self.__attack_queue.get())
-                            self.__selfish_valid_blocks += 2
-                        # honest win
-                        else:
-                            logging.debug(f"honest fork winner-->time: {fork_results['time']}")
-                            self.__blockchain.add_block(Block(results['time']))
-                            self.__honest_valid_blocks += 2
+                        # have honest miner forfeit his block
+                        self.__attack_queue.get()
 
-                            # have honest miner forfeit his block
-                            self.__attack_queue.get()
+                    # shift this frame over 2 blocks
+                    self.__blocks_in_cur_window += 2
+                    # FIXME: CONSIDER INCREMENTING BLOCKS IN WINDOW WITH THE ADD_BLOCK() FUNCTION?
+                    self.__blockchain.add_block(Block(fork_results['time']))
 
-                        # shift this frame over 2 blocks
-                        self.__blocks_in_cur_window += 2
-                        # FIXME: CONSIDER INCREMENTING BLOCKS IN WINDOW WITH THE ADD_BLOCK() FUNCTION?
-                        self.__blockchain.add_block(Block(fork_results['time']))
+                    logging.debug("post-fork blockchain:")
+                    logging.debug(self.__blockchain)
 
-                        logging.debug("post-fork blockchain:")
-                        logging.debug(self.__blockchain)
-
-                    # force selfish miner to push all blocks and establish win
-                    elif self.__attack_queue.qsize() == 2:
-                        self.__blocks_in_cur_window += 2
-                        for _ in range(2):
-                            self.__blockchain.add_block(self.__attack_queue.get())
-                        logging.debug("selfish miner added 2 blocks")
-                        logging.debug(self.__blockchain)
+                # force selfish miner to push all blocks and establish win
+                elif self.__attack_queue.qsize() == 2:
+                    self.__blocks_in_cur_window += 2
+                    for _ in range(2):
+                        self.__blockchain.add_block(self.__attack_queue.get())
+                    logging.debug("selfish miner added 2 blocks")
+                    logging.debug(self.__blockchain)
 
 
-                    # selfish miner publishes only one block and
-                    else:  # attack_queue.qsize() > 2:
-                        pass
+                # selfish miner publishes only one block and
+                else:  # attack_queue.qsize() > 2:
+                    pass
 
 
-                elif results['type'] == 'selfish':
-                    self.__delta += 1
-                    self.__attack_queue.put(Block(results['time']))
+            elif results['type'] == 'selfish':
+                self.__delta += 1
+                self.__attack_queue.put(Block(results['time']))
 
-        print("---<SUMMARY>---")
-        print(self.__blockchain)
+    print("---<SUMMARY>---")
+    print(self.__blockchain)
 
-        # FIXME: Figure out what the selfish miner does when validated blocks exceeds 2016 (does he publish or throw those away?)
-        # FIXME: In this case, selfish miner will publish only his first block to potentially win the fork, and has to discard his subsequent blocks in his selfish chain
-        # FIXME: since they will no longer be valid (difficulty is encoded into the header)
+    # FIXME: Figure out what the selfish miner does when validated blocks exceeds 2016 (does he publish or throw those away?)
+    # FIXME: In this case, selfish miner will publish only his first block to potentially win the fork, and has to discard his subsequent blocks in his selfish chain
+    # FIXME: since they will no longer be valid (difficulty is encoded into the header)
 
 
 def main() -> None:
