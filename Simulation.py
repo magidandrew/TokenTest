@@ -60,9 +60,35 @@ class Simulator:
             # TODO: implement this stuff
             pass
 
-    def execute_instruction(self, agent: AbstractAgent) -> None:
+    def execute_instruction(self, agent: AbstractAgent, pp_size: int, length_adjustment: int) -> None:
         # TODO: append the appropriate block to the blockchain. Return its state to all the agents.
         pass
+
+    def reset_agents(self):
+        for agent in self.agents:
+            agent.secret_chain.clear()
+
+    def run(self) -> None:
+        while len(self.blockchain) < self.WINDOW_SIZE:
+            winning_agent, mining_time = self.blocktime_oracle.next_time()
+
+            transmission = [Block(mining_timestamp=mining_time, timestamp_of_last_block=self.blockchain.get_global_time_of_chain(), winning_agent=winning_agent)]
+            self.transmit_blocks_to_all_agents(transmission)
+
+            winning_agent, pp_size, length_adjustment = self.receive_from_all_agents()
+
+            self.execute_instruction(winning_agent, pp_size, length_adjustment)
+
+            self.reset_agents()
+            
+
+
+
+
+
+
+
+
 
 
 class SelfishMining:

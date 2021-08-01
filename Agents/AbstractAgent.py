@@ -11,7 +11,7 @@ class AbstractAgent(ABC):
         self.gamma = gamma
         self.mining_queue = Queue()
         self.is_mining = True
-        self.tmp_block_storage = []
+        self.secret_chain = []
         AbstractAgent.counter += 1
 
     def __str__(self) -> str:
