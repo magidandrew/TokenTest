@@ -1,4 +1,5 @@
 from Agents.AbstractAgent import AbstractAgent
+from Structure.Block import Block
 import numpy as np
 
 
@@ -17,5 +18,10 @@ class SelfishAgent(AbstractAgent):
 
     def broadcast(self) -> Block:
         return None
+
+    def recieve_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
+
+        if payload[1] > self.mining_queue.qsize():
+            self.
 
 

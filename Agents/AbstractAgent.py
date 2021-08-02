@@ -1,3 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from Agents.AbstractAgent import AbstractAgent
+
 from abc import ABC, abstractmethod
 from queue import Queue
 from Structure.Block import Block
@@ -11,6 +16,7 @@ class AbstractAgent(ABC):
         self.gamma = gamma
         self.mining_queue = Queue()
         self.is_mining = True
+        self.broadcast_queue
         AbstractAgent.counter += 1
 
     def __str__(self) -> str:
@@ -25,9 +31,13 @@ class AbstractAgent(ABC):
     def transmit_blocks(self) -> list[Block]:
         pass
 
-    def receive_blocks(self, blocks: list[Block]) -> None:
+    def receive_blocks_from_oracle(self, blocks: list[Block]) -> None:
         for block in blocks:
             self.mining_queue.put(block)
+
+    @abstractmethod
+    def recieve_blocks(self,*kwargs) -> None:
+        pass
 
     # get_type should only return "selfish", "ism", "honest", etc
     @abstractmethod

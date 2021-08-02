@@ -72,20 +72,21 @@ class Simulator:
             agent.secret_chain.clear()
 
     def transmit_block_to_agent(self, agent: AbstractAgent, block: Block) -> None:
-        agent.receive_blocks(block)
+        agent.receive_blocks_from_oracle([block])
 
     def recieve_from_winning_agent(self, winning_agent: AbstractAgent) -> Block:
         return winning_agent.broadcast()
 
-    def transmit_block_to_all_agents(self, payload -> tuple[AbstractAgent, int]) -> None:
+    def transmit_block_to_all_agents(self, payload: tuple[AbstractAgent, int]) -> None:
 
         for agent in self.agents:
             agent.receive_blocks(blocks)
 
-    def receive_from_all_agents(self) -> tuple[AbstractAgent, int]:
+    def receive_max_from_all_agents(self) -> tuple[AbstractAgent, int]:
         # we are receiving list[blocks] from each agent
-        recieved_blocks = []
+        received_blocks = []
         for agent in self.agents:
+            received_blocks.append(agent.)
 
 
     def run(self) -> None:
@@ -100,12 +101,12 @@ class Simulator:
             # if the agent chooses to transmit it publicly to the rest of the miners, we trigger the while loop
             if transmission:
 
-                payload = tuple[transmission.winning_agent, 1]
+                payload = (transmission.winning_agent, 1)
                 # effectively do-while
                 while True:
 
                     self.transmit_block_to_all_agents(payload)
-                    payload = self.receive_from_all_agents()
+                    payload = self.receive_max_from_all_agents()
 
 '''
 

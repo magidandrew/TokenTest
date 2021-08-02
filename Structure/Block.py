@@ -1,6 +1,7 @@
-from Agents.AbstractAgent import AbstractAgent
-# TODO: import the rest of the agents
-from Agents.SelfishAgent import SelfishAgent
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from Agents.AbstractAgent import AbstractAgent
 
 
 class Block:

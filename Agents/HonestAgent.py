@@ -1,4 +1,5 @@
 from Agents.AbstractAgent import AbstractAgent
+from Structure.Block import Block
 import numpy as np
 
 
@@ -18,5 +19,12 @@ class HonestAgent(AbstractAgent):
 
     def broadcast(self) -> Block:
         return self.mining_queue.peek()
+
+    def recieve_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
+        pass
+
+
+
+
 
 
