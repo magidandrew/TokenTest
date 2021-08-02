@@ -6,6 +6,7 @@ from Agents.SelfishAgent import SelfishAgent
 from Agents.HonestAgent import HonestAgent
 from Agents.SmartAgent import SmartAgent
 from collections import deque
+from Structure.Block import Block
 
 
 class BlocktimeOracle:
@@ -49,11 +50,15 @@ class BlocktimeOracle:
 
         self.allTimes = deque(all_times_arr)
 
-    def next_time(self) -> (AbstractAgent, float):
+    def next_time(self) -> Block:
         if self.__is_empty():
             self.extend()
         self.__current_time = self.peek_left()[1]  # must index the time in the tuple, hence [1]
-        return self.allTimes.popleft()
+        winning_agent, mining_time = self.allTimes.popleft()
+        transmission = Block(mining_timestamp=mining_time,
+                             timestamp_of_last_block=self.blockchain.get_global_time_of_chain(),
+                             winning_agent=winning_agent)
+        return transmission
 
     # scrap the entire existing deque and generate a new deque
     def fork_next_time(self) -> (AbstractAgent, float):

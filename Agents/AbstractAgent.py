@@ -11,7 +11,6 @@ class AbstractAgent(ABC):
         self.gamma = gamma
         self.mining_queue = Queue()
         self.is_mining = True
-        self.secret_chain = []
         AbstractAgent.counter += 1
 
     def __str__(self) -> str:
@@ -27,11 +26,16 @@ class AbstractAgent(ABC):
         pass
 
     def receive_blocks(self, blocks: list[Block]) -> None:
-        self.tmp_block_storage = blocks
+        for block in blocks:
+            self.mining_queue.put(block)
 
     # get_type should only return "selfish", "ism", "honest", etc
     @abstractmethod
     def get_type(self) -> str:
+        pass
+
+    @abstractmethod
+    def broadcast(self) -> Block:
         pass
 
     # FIXME: should some of these methods be defined as __name__ since we are needed names of unique class instances

@@ -26,10 +26,8 @@ class Simulator:
         self.blockchain: Blockchain = Blockchain()
         self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(difficulty=self.difficulty)
 
-    def transmit_block_to_all_agents(self, block: Block) -> None:
-        for agent in self.agents:
-            agent.receive_blocks(blocks)
 
+    '''
     # pp_size: private progression size
     # TODO: Fork conditions....look at all instruction tuples, and if theres no unique max
     # return val: tuple(agent, pp_size, valid chain length adjustment)
@@ -63,6 +61,7 @@ class Simulator:
         else:
             # TODO: implement this stuff
             pass
+    '''
 
     def execute_instruction(self, agent: AbstractAgent, pp_size: int, length_adjustment: int) -> None:
         # TODO: append the appropriate block to the blockchain. Return its state to all the agents.
@@ -71,6 +70,44 @@ class Simulator:
     def reset_agents(self):
         for agent in self.agents:
             agent.secret_chain.clear()
+
+    def transmit_block_to_agent(self, agent: AbstractAgent, block: Block) -> None:
+        agent.receive_blocks(block)
+
+    def recieve_from_winning_agent(self, winning_agent: AbstractAgent) -> Block:
+        return winning_agent.broadcast()
+
+    def transmit_block_to_all_agents(self, payload -> tuple[AbstractAgent, int]) -> None:
+
+        for agent in self.agents:
+            agent.receive_blocks(blocks)
+
+    def receive_from_all_agents(self) -> tuple[AbstractAgent, int]:
+        # we are receiving list[blocks] from each agent
+        recieved_blocks = []
+        for agent in self.agents:
+
+
+    def run(self) -> None:
+        # Keep looping until the length of the blockchain is equal to the window size.
+        while len(self.__blockchain) < self.WINDOW_SIZE:
+            transmission = self.blocktime_oracle.next_time()
+            # agent needs to be aware of the block they mined
+            self.transmit_block_to_agent(agent=transmission.winning_agent, block=transmission)
+
+            transmission = self.recieve_from_winning_agent(transmission.winning_agent)
+
+            # if the agent chooses to transmit it publicly to the rest of the miners, we trigger the while loop
+            if transmission:
+
+                payload = tuple[transmission.winning_agent, 1]
+                # effectively do-while
+                while True:
+
+                    self.transmit_block_to_all_agents(payload)
+                    payload = self.receive_from_all_agents()
+
+'''
 
     def run(self) -> None:
         LEN_POSITION = 1
@@ -104,8 +141,8 @@ class Simulator:
                 # Create the block to be transmitted to every agent
                 transmission: Block = self.PLACEHOLDER_FOR_EXECUTION(payload)
 
-
-            # send/recv for blockchain
+'''
+# send/recv for blockchain
 '''
     def run(self) -> None:
         while len(self.blockchain) < self.WINDOW_SIZE:
@@ -120,9 +157,6 @@ class Simulator:
 
             self.reset_agents()
 '''
-
-
-
 
 
 class SelfishMining:

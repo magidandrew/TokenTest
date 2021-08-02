@@ -15,4 +15,7 @@ class SelfishAgent(AbstractAgent):
     def get_type(self):
         return str(self.type) + "_" + str(self.id)
 
+    def broadcast(self) -> Block:
+        return None
+
 

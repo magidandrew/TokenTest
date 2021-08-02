@@ -15,3 +15,8 @@ class HonestAgent(AbstractAgent):
 
     def get_type(self):
         return str(self.type) + "_" + str(self.id)
+
+    def broadcast(self) -> Block:
+        return self.mining_queue.peek()
+
+

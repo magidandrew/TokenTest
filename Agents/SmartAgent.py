@@ -17,3 +17,15 @@ class SmartAgent(AbstractAgent):
 
     def get_type(self):
         return str(self.type) + "_" + str(self.id)
+
+    def receive_blocks(self, blocks: list[Block]) -> None:
+        if self.is_mining:
+            for block in blocks:
+                self.mining_queue.put(block)
+
+    def broadcast(self) -> Block:
+        # if miner is active then it will want to broadcast the block immediately
+        if self.is_mining:
+            return self.mining_queue.peek()
+        # If its not working this will not execute
+        return None
