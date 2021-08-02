@@ -55,7 +55,10 @@ class Simulator:
             raise Exception(f"invalid num of blocks ({len(max_blocks)} blocks) received from agents")
         # one winner established
         elif len(max_blocks) == 1:
-            self.blockchain.add_block(Block(mining_timestamp=transmitted_block.mining_time, timestamp_of_last_block=self.blockchain.get_global_time_of_chain(), winning_agent=max_blocks[0][POSITION_OF_AGENT]))  # TODO: figure out how this will be passed in
+            self.blockchain.add_block(Block(mining_timestamp=transmitted_block.mining_time,
+                                            timestamp_of_last_block=self.blockchain.get_global_time_of_chain(),
+                                            winning_agent=max_blocks[0][
+                                                POSITION_OF_AGENT]))  # TODO: figure out how this will be passed in
         # here we fork with the winners
         else:
             # TODO: implement this stuff
@@ -70,6 +73,41 @@ class Simulator:
             agent.secret_chain.clear()
 
     def run(self) -> None:
+        LEN_POSITION = 1
+        while len(self.__blockchain) < self.WINDOW_SIZE:
+            winning_agent, mining_time = self.blocktime_oracle.next_time()
+            # send/recv for agents - which agent mined a block and will it be released publicly
+            self.transmit_block_to_agent(winning_agent, mining_time)
+            broadcast = self.receive_broadcast_from_agent()
+
+            if broadcast is None:
+                continue
+
+            transmission = Block(mining_timestamp=mining_time, timestamp_of_last_block=self.blockchain.get_global_time_of_chain(), winning_agent=winning_agent)
+
+
+            while True:
+                self.transmit_block_to_all_agents(transmission)
+                # payload is a list of tuples of type (agent, num_revealed_blocks)
+                payload: list[tuple[AbstractAgent, int]] = self.receive_from_all_agents(transmission)
+
+                # exit condition, all lengths are 0
+                # base case
+                if max(payload, key=lambda x: x[LEN_POSITION]) == 0:
+                    # TODO: Append blocks to blockchain
+                    break
+                # Only 1 agent has a block
+                if is_onehot(payload, key=lambda x: x[LEN_POSITION]) == 1:
+                    # TODO: Append blocks to blockchain
+                    break
+
+                # Create the block to be transmitted to every agent
+                transmission: Block = self.PLACEHOLDER_FOR_EXECUTION(payload)
+
+
+            # send/recv for blockchain
+'''
+    def run(self) -> None:
         while len(self.blockchain) < self.WINDOW_SIZE:
             winning_agent, mining_time = self.blocktime_oracle.next_time()
 
@@ -81,12 +119,7 @@ class Simulator:
             self.execute_instruction(winning_agent, pp_size, length_adjustment)
 
             self.reset_agents()
-
-
-
-
-
-
+'''
 
 
 
