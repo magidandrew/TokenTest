@@ -20,6 +20,9 @@ def run():
     if len(sys.argv) == 1:
         parser.print_usage()
 
+    # call simulator HERE. look at factory pattern, might come in handy for instantiating
+    # the miner classes based on cli input
+
 
 if __name__ == "__main__":
     run()

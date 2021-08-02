@@ -15,7 +15,7 @@ class BlocktimeOracle:
         self.difficulty: float = difficulty
         self.agents = agents
         # TODO: Do we actually need this?
-        # self.__current_time = 0.0
+        self.__current_time = 0.0
 
         self.extend()
 
@@ -30,8 +30,9 @@ class BlocktimeOracle:
             agent_times = np.cumsum(agent_times)
 
             # Start the times from when we last left off
-            # agent_times = agent_times + self.__current_time
-            agent_times = agent_times + fork_delta
+            self.__current_time += fork_delta
+            agent_times = agent_times + self.__current_time
+            # agent_times = agent_times + fork_delta
 
             # Mark each time with the agent that created it
             # DEBUG
