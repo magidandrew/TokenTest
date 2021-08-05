@@ -2,9 +2,9 @@ import numpy as np
 
 # FIXME: IMPORT STATEMENTS DON'T QUITE WORK HERE
 from Agents.AbstractAgent import AbstractAgent
-from Agents.SelfishAgent import SelfishAgent
-from Agents.HonestAgent import HonestAgent
-from Agents.SmartAgent import SmartAgent
+# from Agents.SelfishAgent import SelfishAgent
+# from Agents.HonestAgent import HonestAgent
+# from Agents.SmartAgent import SmartAgent
 from collections import deque
 from Structure.Block import Block
 
@@ -56,7 +56,9 @@ class BlocktimeOracle:
         self.__current_time = self.peek_left()[1]  # must index the time in the tuple, hence [1]
         winning_agent, mining_time = self.allTimes.popleft()
         transmission = Block(mining_timestamp=mining_time,
-                             timestamp_of_last_block=self.blockchain.get_global_time_of_chain(),
+                             # FIXME: this needs to be accounted for
+                             timestamp_of_last_block= 0.0,
+                             # timestamp_of_last_block=self.blockchain.get_global_time_of_chain(),
                              winning_agent=winning_agent)
         return transmission
 

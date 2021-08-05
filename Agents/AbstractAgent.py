@@ -16,7 +16,7 @@ class AbstractAgent(ABC):
         self.gamma = gamma
         self.mining_queue = Queue()
         self.is_mining = True
-        self.broadcast_queue
+        self.broadcast_queue = Queue()
         AbstractAgent.counter += 1
 
     def __str__(self) -> str:

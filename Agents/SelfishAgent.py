@@ -20,8 +20,8 @@ class SelfishAgent(AbstractAgent):
         return None
 
     def recieve_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
-
-        if payload[1] > self.mining_queue.qsize():
-            self.
+        print("here")
+        # if payload[1] > self.mining_queue.qsize():
+        #     self.
 
 

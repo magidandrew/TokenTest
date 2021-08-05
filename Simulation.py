@@ -72,6 +72,7 @@ class Simulator:
             agent.secret_chain.clear()
 
     def transmit_block_to_agent(self, agent: AbstractAgent, block: Block) -> None:
+        # puts blocks into the agent's mining queue
         agent.receive_blocks_from_oracle([block])
 
     def recieve_from_winning_agent(self, winning_agent: AbstractAgent) -> Block:
@@ -91,7 +92,7 @@ class Simulator:
 
     def run(self) -> None:
         # Keep looping until the length of the blockchain is equal to the window size.
-        while len(self.__blockchain) < self.WINDOW_SIZE:
+        while len(self.blockchain) < self.WINDOW_SIZE:
             transmission = self.blocktime_oracle.next_time()
             # agent needs to be aware of the block they mined
             self.transmit_block_to_agent(agent=transmission.winning_agent, block=transmission)
@@ -101,12 +102,14 @@ class Simulator:
             # if the agent chooses to transmit it publicly to the rest of the miners, we trigger the while loop
             if transmission:
 
-                payload = (transmission.winning_agent, 1)
+                payload = (transmission.winning_agent, 1)  # come back to this soon
                 # effectively do-while
                 while True:
 
                     self.transmit_block_to_all_agents(payload)
                     payload = self.receive_max_from_all_agents()
+
+
 
 '''
 
