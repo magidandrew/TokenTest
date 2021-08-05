@@ -119,35 +119,77 @@ def difficulty_time(nb_simulations: int, strat: str, difficulty_list: list, alph
     plt.show()
 
 
-'''
-
-
 def alpha_revenue(strat: str, revenue_mean_list: list, cost_mean_list: list, alpha_list: list, gamma: float) -> None:
-    # Revenue v.s. Alpha
-    plt.plot(revenue_mean_list, alpha_list, label="gamma" + str(gamma))
+    if len(revenue_mean_list) != len(cost_mean_list):
+        sys.exit(
+            "ERROR: The length revenue_mean_list doesn't match with the length of cost_mean_list")
+    if len(revenue_mean_list) != len(alpha_list):
+        sys.exit(
+            "ERROR: The length revenue_mean_list doesn't match with the length of alpha_list")
+    if len(cost_mean_list) != len(alpha_list):
+        sys.exit(
+            "ERROR: The length cost_mean_list doesn't match with the length of alpha_list")
 
-    plt.xlabel("Alpha level")
-    plt.ylabel("Revenue")
+    plt.figure(figsize=[6.4, 15.8])
+
+    # Revenue v.s. Alpha
+    plt.plot(alpha_list, revenue_mean_list, color="red",
+             label="Revenue with "" gamma: " + str(gamma))
+
+    for i in range(len(alpha_list)):
+        plt.text(alpha_list[i], revenue_mean_list[i],
+                 revenue_mean_list[i], ha="right", va="center")
+
+    plt.xlabel("Alpha level (Percentage)")
+    plt.xticks(np.arange(min(alpha_list), max(alpha_list)+0.1, 0.1))
+    plt.ylabel("Revenue (Blocks)")
     plt.title("Revenue of {} v.s. Alpha Level".format(strat))
     plt.legend()
     plt.show()
 
     # Cost v.s. Alpha
-    plt.plot(cost_mean_list, alpha_list, label="gamma" + str(gamma))
+    plt.plot(alpha_list, cost_mean_list, color="green",
+             label="Cost with "" gamma: " + str(gamma))
 
-    plt.xlabel("Alpha level")
-    plt.ylabel("Cost")
+    for i in range(len(alpha_list)):
+        plt.text(alpha_list[i], cost_mean_list[i],
+                 cost_mean_list[i], ha="right", va="center")
+
+    plt.xlabel("Alpha level (Percentage)")
+    plt.xticks(np.arange(min(alpha_list), max(alpha_list)+0.1, 0.1))
+    plt.ylabel("Cost (Blocks)")
     plt.title("Cost of {} v.s. Alpha Level".format(strat))
     plt.legend()
     plt.show()
 
     # Gross Profit v.s. Alpha
-    gross_mean_list = revenue_mean_list - cost_mean_list
-    plt.plot(gross_mean_list, alpha_list, label="gamma" + str(gamma))
+    gross_mean_list = [revenue_mean_list[i] - cost_mean_list[i]
+                       for i in range(len(revenue_mean_list))]
+    plt.plot(alpha_list, gross_mean_list,
+             color="blue", label="Gross Profit with " + "gamma" + str(gamma))
 
-    plt.xlabel("Alpha level")
-    plt.ylabel("Gross Profit")
+    for i in range(len(alpha_list)):
+        plt.text(alpha_list[i], gross_mean_list[i],
+                 gross_mean_list[i], ha="right", va="center")
+
+    plt.xlabel("Alpha level (Percentage)")
+    plt.ylabel("Gross Profit (Blocks)")
     plt.title("Gross Profit of {} v.s. Alpha Level".format(strat))
     plt.legend()
     plt.show()
-'''
+
+    # Gross Profit/TH v.s Alpha
+    gross_mean_list = [round((revenue_mean_list[i] - cost_mean_list[i])/alpha_list[i], 2) if alpha_list[i] != 0 else 0
+                       for i in range(len(revenue_mean_list))]
+    plt.plot(alpha_list, gross_mean_list,
+             color="blue", label="Gross Profit/TH with " + "gamma" + str(gamma))
+
+    for i in range(len(alpha_list)):
+        plt.text(alpha_list[i], gross_mean_list[i],
+                 gross_mean_list[i], ha="right", va="center")
+
+    plt.xlabel("Alpha level (Percentage)")
+    plt.ylabel("Gross Profit/TH (Blocks/Total Hash)")
+    plt.title("Gross Profit/Total Hash Power of {} v.s. Alpha Level".format(strat))
+    plt.legend()
+    plt.show()
