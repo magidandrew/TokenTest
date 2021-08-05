@@ -71,43 +71,50 @@ class Simulator:
         for agent in self.agents:
             agent.secret_chain.clear()
 
-    def transmit_block_to_agent(self, agent: AbstractAgent, block: Block) -> None:
-        # puts blocks into the agent's mining queue
-        agent.receive_blocks_from_oracle([block])
-
     def recieve_from_winning_agent(self, winning_agent: AbstractAgent) -> Block:
         return winning_agent.broadcast()
 
     def transmit_block_to_all_agents(self, payload: tuple[AbstractAgent, int]) -> None:
-
         for agent in self.agents:
             agent.receive_blocks(blocks)
 
-    def receive_max_from_all_agents(self) -> tuple[AbstractAgent, int]:
+    def receive_maxes_from_all_agents(self) -> list[tuple[AbstractAgent, int]]:
+        POSITION_OF_LEN = 1
         # we are receiving list[blocks] from each agent
         received_blocks = []
-        for agent in self.agents:
-            received_blocks.append(agent.)
 
+        # only largest pp_size gets accepted
+        for agent in self.agents:
+            # (agent and transmitted blocks)
+            # TODO: transmit actual chain instead of just the size? (to keep timestamps)
+            received_blocks.append(agent.broadcast)  # type tuple(AbstractAgent, int)
+
+        # find pp_size maxes
+        # structure: [ (agent, int), ... , (agent, int)]
+        max_len = max(received_blocks, key=lambda x: len(x[POSITION_OF_LEN]))  # len of transmitted blocks is pp_size
+        max_blocks = [x for x in received_blocks if len(x[POSITION_OF_LEN]) == max_len[POSITION_OF_LEN]]
+        return max_blocks
 
     def run(self) -> None:
         # Keep looping until the length of the blockchain is equal to the window size.
         while len(self.blockchain) < self.WINDOW_SIZE:
             transmission = self.blocktime_oracle.next_time()
             # agent needs to be aware of the block they mined
-            self.transmit_block_to_agent(agent=transmission.winning_agent, block=transmission)
-
-            transmission = self.recieve_from_winning_agent(transmission.winning_agent)
+            transmission.winning_agent.receive_blocks_from_oracle([transmission])
 
             # if the agent chooses to transmit it publicly to the rest of the miners, we trigger the while loop
-            if transmission:
+            if transmission.winning_agent.publish_block:
+
+                transmission.winning_agent.mining_queue.get()
 
                 payload = (transmission.winning_agent, 1)  # come back to this soon
                 # effectively do-while
                 while True:
-
                     self.transmit_block_to_all_agents(payload)
-                    payload = self.receive_max_from_all_agents()
+                    maxes = self.receive_maxes_from_all_agents()
+
+                    if len(maxes) == 1:
+
 
 
 

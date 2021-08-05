@@ -17,6 +17,8 @@ class AbstractAgent(ABC):
         self.mining_queue = Queue()
         self.is_mining = True
         self.broadcast_queue = Queue()
+        self.publish_block = True
+        self.broadcast = None
         AbstractAgent.counter += 1
 
     def __str__(self) -> str:
@@ -31,10 +33,6 @@ class AbstractAgent(ABC):
     def transmit_blocks(self) -> list[Block]:
         pass
 
-    def receive_blocks_from_oracle(self, blocks: list[Block]) -> None:
-        for block in blocks:
-            self.mining_queue.put(block)
-
     @abstractmethod
     def recieve_blocks(self,*kwargs) -> None:
         pass
@@ -44,9 +42,14 @@ class AbstractAgent(ABC):
     def get_type(self) -> str:
         pass
 
+    # @abstractmethod
+    # def broadcast(self) -> Block:
+    #     pass
+
     @abstractmethod
-    def broadcast(self) -> Block:
-        pass
+    def receive_blocks_from_oracle(self, blocks: list[Block]) -> None:
+        for block in blocks:
+            self.mining_queue.put(block)
 
     # FIXME: should some of these methods be defined as __name__ since we are needed names of unique class instances
     # get_id is a unique specifier of the class instance

@@ -9,6 +9,7 @@ class HonestAgent(AbstractAgent):
         super().__init__(alpha, gamma)
         self.id = super().counter
         self.type = "honest"
+        self.publish_block = False
 
     def get_block_time(self, difficulty: float) -> float:
         difficulty_scaling = 10 * difficulty
@@ -17,8 +18,8 @@ class HonestAgent(AbstractAgent):
     # def get_type(self):
     #     return str(self.type) + "_" + str(self.id)
 
-    def broadcast(self) -> Block:
-        return self.mining_queue.peek()
+    # def broadcast(self) -> Block:
+    #     return self.mining_queue.peek()
 
     def transmit_blocks(self) -> list[Block]:
         pass
@@ -38,8 +39,20 @@ class HonestAgent(AbstractAgent):
     def length_adjustment(self):
         pass
 
-    # def recieve_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
-    #     pass
+    def receive_blocks_from_oracle(self, blocks: list[Block]) -> None:
+        for block in blocks:
+            self.mining_queue.put(block)
+
+        self.publish_block = True
+
+    def receive_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
+        if self.mining_queue.qsize() < payload[1]:
+            self.broadcast = (self, 0)
+            self.mining_queue.empty()
+        else:
+            self.broadcast = (self, self.mining_queue.qsize())
+            self.mining_queue.empty()
+
 
 
 

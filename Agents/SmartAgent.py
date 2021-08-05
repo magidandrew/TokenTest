@@ -9,6 +9,8 @@ class SmartAgent(AbstractAgent):
         self.is_mining = True
         self.id = super().counter
         self.type = "smart"
+        self.publish_block = True
+
 
 
     def get_block_time(self, difficulty: float) -> float:
@@ -23,9 +25,21 @@ class SmartAgent(AbstractAgent):
             for block in blocks:
                 self.mining_queue.put(block)
 
-    def broadcast(self) -> Block:
-        # if miner is active then it will want to broadcast the block immediately
-        if self.is_mining:
-            return self.mining_queue.peek()
-        # If its not working this will not execute
-        return None
+    # def broadcast(self) -> Block:
+    #     # if miner is active then it will want to broadcast the block immediately
+    #     if self.is_mining:
+    #         return self.mining_queue.peek()
+    #     # If its not working this will not execute
+    #     return None
+
+    def receive_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
+        if not self.is_mining:
+            return
+
+        if self.mining_queue.qsize() < payload[1]:
+            self.broadcast = (self, 0)
+            self.mining_queue.empty()
+        else:
+            self.broadcast = (self, self.mining_queue.qsize())
+            self.mining_queue.empty()
+
