@@ -11,9 +11,11 @@ class HonestAgent(AbstractAgent):
         self.type = "honest"
         self.publish_block = False
 
-    def get_block_time(self, difficulty: float) -> float:
+    def get_block_time(self, difficulty: float, alpha=None) -> float:
+        if not alpha:
+            alpha = self.alpha
         difficulty_scaling = 10 * difficulty
-        return np.random.exponential(1 / self.alpha * difficulty_scaling)
+        return np.random.exponential(1 / alpha * difficulty_scaling)
 
     # def get_type(self):
     #     return str(self.type) + "_" + str(self.id)

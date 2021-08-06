@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 # FIXME: IMPORT STATEMENTS DON'T QUITE WORK HERE
@@ -62,24 +64,39 @@ class BlocktimeOracle:
                              winning_agent=winning_agent)
         return transmission
 
-    def fork(self, difficulty: float, agents: list(AbstractAgent)) -> (AbstractAgent, float):
+    def fork(self, difficulty: float, agents: list[AbstractAgent]) -> tuple[AbstractAgent, AbstractAgent, float]:
 
-        # A function that looks at the participating agents and adds the necessary defectors.
-        def process_defectors(agents: list[AbstractAgent]):
-            for agent in agents:
-                if agent.type == 'honest':
-                    # TODO: split honest miner into a defector and a residual honest miner. Add these new params to the agent class
-            pass
-
-        min_time = 1000000
+        min_time = math.inf
         winning_agent = None
-        agents = process_defectors(agents)
+        winning_block = None
         for agent in agents:
             if agent.is_forking:
-                agent_mine_time = agent.get_block_time(difficulty)
+
+                winning_agent = agent
+
+                if agent.type == "honest":
+                    agent_mine_time_1 = agent.get_block_time(difficulty, alpha=agent.gamma*agent.alpha) #honest
+                    agent_mine_time_2 = agent.get_block_time(difficulty, alpha=(1 - agent.gamma)*agent.alpha) #defectors
+                    agent_mine_time = min(agent_mine_time_2, agent_mine_time_1)
+
+                    # if defector wins, it is a selfish win for the prev block
+                    # if honest wins, winning block is an honest one, if defectors win, it is a selfish win
+                    if agent_mine_time_1 < agent_mine_time_2:
+                        winning_block = agent
+                    else:
+                        for this_agent in agents:
+                            if this_agent.type == 'selfish':
+                                winning_block = this_agent
+                else:
+                    agent_mine_time = agent.get_block_time(difficulty)
+
                 if min_time > agent_mine_time:
                     min_time = agent_mine_time
-                    winning_agent = agent
+                    winning_block = agent
+        return winning_block, winning_agent, min_time
+
+
+
 
 
 

@@ -22,11 +22,10 @@ class Simulator:
         self.WINDOW_SIZE: int = kwargs['window_size']
         self.TIME_PER_BLOCK: float = kwargs['minetime_per_block']
         self.difficulty: float = kwargs['difficulty']
-        self.period_times = [0 for i in range(self.number_of_periods)]
+        self.period_lengths = [0.0 for i in range(self.number_of_periods)]
 
         self.blockchain: Blockchain = Blockchain()
         self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(difficulty=self.difficulty)
-
 
     '''
     # pp_size: private progression size
@@ -89,12 +88,12 @@ class Simulator:
     def run(self) -> None:
         # Run this loop for as many periods we want to simulate
         for i in range(self.number_of_periods):
-            self.period_times[i] = 0
+            self.period_lengths[i] = 0.0
 
             # Keep looping until the length of the blockchain is equal to the window size.
             while len(self.blockchain) < self.WINDOW_SIZE:
                 transmission = self.blocktime_oracle.next_time()
-                self.period_times[i] = transmission.mining_time
+                self.period_lengths[i] = transmission.mining_time
                 # agent needs to be aware of the block they mined
                 transmission.winning_agent.receive_blocks_from_oracle([transmission])
 
@@ -104,38 +103,41 @@ class Simulator:
 
                 transmission.winning_agent.mining_queue.get()
 
-                payload = {"agent" : transmission.winning_agent, "pp_size" : 1}  # come back to this soon
+                payload = {"agent": transmission.winning_agent, "pp_size": 1}  # come back to this soon
                 # effectively do-while
                 while True:
+                    blocks_added = 0
 
                     self.transmit_block_to_all_agents(payload)
                     longest_published_chain = self.get_longest_published_chain()
 
-                    if (len(longest_published_chain) == len(self.agents)) and (longest_published_chain[0][0] == 0):
+                    # all found values from agents is 0
+                    if (len(longest_published_chain) == len(self.agents)) and (longest_published_chain[0][1] == 0):
                         # This means that the most recent payload was successful
                         # All the blocks in the last payload belong to the agent that pushed that public chain
-                        for i in range(payload["pp_size"]):
-                            self.blockchain.add_block(Block(mining_timestamp=self.period_times[i], winning_agent=payload["agent"]))
+                        for j in range(payload["pp_size"]):
+                            self.blockchain.add_block(
+                                Block(mining_timestamp=self.period_lengths[j], winning_agent=payload["agent"]))
+                            blocks_added += 1
                         # Now break out of the infinite loop
                         break
 
                     # If the longest published chain/s is equal to the payload pp_size
-                    elif longest_published_chain[0][0] == payload["pp_size"]:
-                        # TODO: work out a fork
+                    # [0][1] b/c peeking first element (all elements in the list are going to be the same)
+                    elif longest_published_chain[0][1] == payload["pp_size"]:
+                        agents = [longest_published_chain[0][0], payload["agent"]]
+                        winning_block, winning_agent, min_time = self.blocktime_oracle.fork(self.difficulty, agents)
 
-                    # Else the longest pubished chain is longer, and therefore wins. Design the payload object.
+                        payload = (winning_agent, 1)
+
+                        self.blockchain.add_block(
+                            Block(mining_timestamp=self.period_lengths[i], winning_agent=winning_block))
+                        blocks_added += 1
+                        self.period_lengths[i] += min_time
+
+                    # Else the longest published chain is longer, and therefore wins. Design the payload object.
                     else:
-
-
-
-
-
-
-
-
-
-
-
+                        payload = longest_published_chain[0]
 
 
 '''

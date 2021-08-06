@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from Agents.AbstractAgent import AbstractAgent
 
@@ -28,7 +29,7 @@ class AbstractAgent(ABC):
         return ", ".join(return_val)
 
     @abstractmethod
-    def get_block_time(self, difficulty: float):
+    def get_block_time(self, difficulty: float, alpha: float = None):
         pass
 
     @abstractmethod
@@ -36,7 +37,7 @@ class AbstractAgent(ABC):
         pass
 
     @abstractmethod
-    def recieve_blocks(self,*kwargs) -> None:
+    def recieve_blocks(self, *kwargs) -> None:
         pass
 
     # get_type should only return "selfish", "ism", "honest", etc
