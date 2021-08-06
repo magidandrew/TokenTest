@@ -62,6 +62,28 @@ class BlocktimeOracle:
                              winning_agent=winning_agent)
         return transmission
 
+    def fork(self, difficulty: float, agents: list(AbstractAgent)) -> (AbstractAgent, float):
+
+        # A function that looks at the participating agents and adds the neccesary defectors.
+        def process_defectors(agents):
+            for agent in agents:
+                if agent.type == 'honest':
+                    # TODO: split honest miner into a defector and a residual honest miner. Add these new params to the agent class
+            pass
+
+        min_time = 1000000
+        winning_agent = None
+        agents = process_defectors(agents)
+        for agent in agents:
+            if agent.is_forking:
+                agent_mine_time = agent.get_block_time(difficulty)
+                if min_time > agent_mine_time:
+                    min_time = agent_mine_time
+                    winning_agent = agent
+
+
+
+
     # scrap the entire existing deque and generate a new deque
     def fork_next_time(self) -> (AbstractAgent, float):
         self.allTimes.clear()

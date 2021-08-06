@@ -45,8 +45,8 @@ class HonestAgent(AbstractAgent):
 
         self.publish_block = True
 
-    def receive_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
-        if self.mining_queue.qsize() < payload[1]:
+    def receive_blocks(self, payload: dict) -> None:
+        if self.mining_queue.qsize() < payload["pp_size"]:
             self.broadcast = (self, 0)
             self.mining_queue.empty()
         else:

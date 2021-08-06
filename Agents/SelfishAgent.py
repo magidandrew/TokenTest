@@ -14,21 +14,21 @@ class SelfishAgent(AbstractAgent):
         difficulty_scaling = 10 * difficulty
         return np.random.exponential(1 / self.alpha * difficulty_scaling)
 
-    def get_type(self):
-        return str(self.type) + "_" + str(self.id)
+    # def get_type(self):
+    #     return str(self.type) + "_" + str(self.id)
 
     # def broadcast(self) -> Block:
     #     pass
 
 
 
-    def receive_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
-        if self.mining_queue.qsize() < payload[1]:
+    def receive_blocks(self, payload: dict) -> None:
+        if self.mining_queue.qsize() < payload["pp_size"]:
             self.broadcast = (self.id, 0)
             self.mining_queue.empty()
 
         else:
-            delta = self.mining_queue.qsize() - payload[1]
+            delta = self.mining_queue.qsize() - payload["pp_size"]
 
             if delta <= 1:
                 self.broadcast = (self, self.mining_queue.qsize())
@@ -37,6 +37,7 @@ class SelfishAgent(AbstractAgent):
             else:
                 self.broadcast = (self, 1)
                 self.mining_queue.get()
+                self.is_forking = False
 
 
 

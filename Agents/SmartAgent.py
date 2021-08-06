@@ -17,13 +17,13 @@ class SmartAgent(AbstractAgent):
         difficulty_scaling = 10 * difficulty
         return np.random.exponential(1 / (1 - self.alpha) * difficulty_scaling)
 
-    def get_type(self):
-        return str(self.type) + "_" + str(self.id)
+    # def get_type(self):
+    #     return str(self.type) + "_" + str(self.id)
 
-    def receive_blocks(self, blocks: list[Block]) -> None:
-        if self.is_mining:
-            for block in blocks:
-                self.mining_queue.put(block)
+    # def receive_blocks(self, blocks: list[Block]) -> None:
+    #     if self.is_mining:
+    #         for block in blocks:
+    #             self.mining_queue.put(block)
 
     # def broadcast(self) -> Block:
     #     # if miner is active then it will want to broadcast the block immediately
@@ -32,11 +32,11 @@ class SmartAgent(AbstractAgent):
     #     # If its not working this will not execute
     #     return None
 
-    def receive_blocks(self, payload: tuple[AbstractAgent, int]) -> None:
+    def receive_blocks(self, payload: dict) -> None:
         if not self.is_mining:
             return
 
-        if self.mining_queue.qsize() < payload[1]:
+        if self.mining_queue.qsize() < payload["pp_size"]:
             self.broadcast = (self, 0)
             self.mining_queue.empty()
         else:

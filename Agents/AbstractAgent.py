@@ -19,6 +19,8 @@ class AbstractAgent(ABC):
         self.broadcast_queue = Queue()
         self.publish_block = True
         self.broadcast = None
+        self.is_forking = True
+        self.type = None
         AbstractAgent.counter += 1
 
     def __str__(self) -> str:
@@ -40,7 +42,7 @@ class AbstractAgent(ABC):
     # get_type should only return "selfish", "ism", "honest", etc
     @abstractmethod
     def get_type(self) -> str:
-        pass
+        return self.type
 
     # @abstractmethod
     # def broadcast(self) -> Block:
