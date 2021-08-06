@@ -64,8 +64,8 @@ class BlocktimeOracle:
 
     def fork(self, difficulty: float, agents: list(AbstractAgent)) -> (AbstractAgent, float):
 
-        # A function that looks at the participating agents and adds the neccesary defectors.
-        def process_defectors(agents):
+        # A function that looks at the participating agents and adds the necessary defectors.
+        def process_defectors(agents: list[AbstractAgent]):
             for agent in agents:
                 if agent.type == 'honest':
                     # TODO: split honest miner into a defector and a residual honest miner. Add these new params to the agent class
