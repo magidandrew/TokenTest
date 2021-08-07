@@ -23,6 +23,8 @@ class AbstractAgent(ABC):
         self.is_forking = True
         self.type = None
         AbstractAgent.counter += 1
+        self.defected_blocks: int = 0
+        self.mined_blocks: int = 0
 
     def __str__(self) -> str:
         return_val = [f"alpha: {self.alpha}", f"type: {self.__class__.__name__}"]

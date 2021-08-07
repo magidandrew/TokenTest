@@ -85,6 +85,20 @@ class Simulator:
         max_blocks = [x for x in received_blocks if len(x[POSITION_OF_LEN]) == max_len[POSITION_OF_LEN]]
         return max_blocks
 
+    def get_longest_internal_chain(self, internal_state: dict) -> list[tuple[AbstractAgent, int]]:
+        max_len: int = internal_state[
+            max(internal_state, key=lambda x: internal_state[x])]  # len of transmitted blocks is pp_size
+
+        max_agent_len_tuples = [x for x in internal_state if internal_state[x] == ma]
+        return max_blocks
+
+    def tuple_to_payload(self, agent: AbstractAgent, pp_size: int):
+        payload = dict()
+        payload["agent"] = agent
+        payload["pp_size"] = pp_size
+
+        return payload
+
     def run(self) -> None:
         # Run this loop for as many periods we want to simulate
         for i in range(self.number_of_periods):
@@ -103,8 +117,51 @@ class Simulator:
 
                 transmission.winning_agent.mining_queue.get()
 
-                payload = {"agent": transmission.winning_agent, "pp_size": 1}  # come back to this soon
-                # effectively do-while
+                payload = {"agent": transmission.winning_agent, "pp_size": 1}
+
+                internal_state = dict.fromkeys(self.agents, 0)
+                # this is the honest miner that found one. hard-coding the win before iterating further
+                internal_state[payload["agent"]] = 1
+
+                # do-while
+                while True:
+                    self.transmit_block_to_all_agents(payload)
+                    longest_published_chain: list[tuple[AbstractAgent, int]] = self.get_longest_published_chain()
+
+                    # base case
+                    # check that all are outputs are 0; [1] b/c looking at int in tuple
+                    # TODO: make sure this isn't buggy...
+                    if longest_published_chain == [x for x in longest_published_chain if x[1] == 0]:
+                        # check internal state to see if there should be a fork
+                        longest_state_chains: list[tuple[AbstractAgent, int]] = self.get_longest_internal_chain(
+                            internal_state)
+                        # If the longest chain is unique, so no need to fork
+                        if len(longest_state_chains) == 1:
+                            # payload["agent"] = longest_state_chains[0][0] #[0]-first and only element in list, [0]-agent
+                            # payload["pp_size"] = longest_state_chains[0][1]
+                            self.tuple_to_payload(longest_state_chains)
+                        # If longest chain not unique, we must fork to establish a winner
+                        elif len(longest_state_chains) > 1:
+                            winning_chain_agent, winning_agent, min_time = self.blocktime_oracle.fork(self.difficulty,
+                                                                                                      self.agents)
+                            # defectors won. ex: honest win, but selfish-miner keeps his mined block
+                            if winning_chain_agent != winning_agent:
+                                winning_chain_agent.defected_blocks += 1
+                            # increment internal_state regardless
+                            internal_state[winning_chain_agent] += 1
+
+                            # fork will only have one winner, hence the 1
+                            payload = self.tuple_to_payload(winning_chain_agent, 1)
+
+
+
+                        # error-handling
+                        else:
+                            raise (Exception(f"longest_state_chains: {len(longest_state_chains)}. Value"
+                                             f"must be greater than 0."))
+
+                '''
+                # do-while
                 while True:
                     blocks_added = 0
 
@@ -112,9 +169,10 @@ class Simulator:
                     longest_published_chain = self.get_longest_published_chain()
 
                     # all found values from agents is 0
-                    if (len(longest_published_chain) == len(self.agents)) and (longest_published_chain[0][1] == 0):
+                    if len(longest_published_chain) == len(self.agents) and longest_published_chain[0][1] == 0:
                         # This means that the most recent payload was successful
                         # All the blocks in the last payload belong to the agent that pushed that public chain
+                        # when no one has any more blocks secretly/publicly
                         for j in range(payload["pp_size"]):
                             self.blockchain.add_block(
                                 Block(mining_timestamp=self.period_lengths[j], winning_agent=payload["agent"]))
@@ -125,10 +183,12 @@ class Simulator:
                     # If the longest published chain/s is equal to the payload pp_size
                     # [0][1] b/c peeking first element (all elements in the list are going to be the same)
                     elif longest_published_chain[0][1] == payload["pp_size"]:
-                        agents = [longest_published_chain[0][0], payload["agent"]]
+                        agets = [longest_published_chain[0][0], payload["agent"]]
                         winning_block, winning_agent, min_time = self.blocktime_oracle.fork(self.difficulty, agents)
 
-                        payload = (winning_agent, 1)
+                        payload["agent"] = winning_agent
+                        payload["pp_size"] = 1
+
 
                         self.blockchain.add_block(
                             Block(mining_timestamp=self.period_lengths[i], winning_agent=winning_block))
@@ -137,7 +197,10 @@ class Simulator:
 
                     # Else the longest published chain is longer, and therefore wins. Design the payload object.
                     else:
-                        payload = longest_published_chain[0]
+                        # FIXME: is this right? and try to avoid magic numbers
+                        payload["agent"] = longest_published_chain[0][0]
+                        payload["pp_size"] = longest_published_chain[0][1]
+                    '''
 
 
 '''
