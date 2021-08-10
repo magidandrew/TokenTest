@@ -4,9 +4,8 @@ import numpy as np
 
 # FIXME: IMPORT STATEMENTS DON'T QUITE WORK HERE
 from Agents.AbstractAgent import AbstractAgent
-# from Agents.SelfishAgent import SelfishAgent
+from Agents.SelfishAgent import SelfishAgent
 # from Agents.HonestAgent import HonestAgent
-# from Agents.SmartAgent import SmartAgent
 from collections import deque
 from Structure.Block import Block
 
@@ -65,11 +64,12 @@ class BlocktimeOracle:
         return transmission
 
     def fork(self, difficulty: float, agents: list[AbstractAgent]) -> tuple[AbstractAgent, AbstractAgent, float]:
-
         min_time = math.inf
         winning_agent = None
         winning_block = None
         for agent in agents:
+            # FIXME: when will is_forking be set to false in another part of the code?
+            # FIXME: do we even need this?
             if agent.is_forking:
 
                 winning_agent = agent
@@ -85,7 +85,8 @@ class BlocktimeOracle:
                         winning_block = agent
                     else:
                         for this_agent in agents:
-                            if this_agent.type == 'selfish':
+                            # FIXME: not enough to check for the first selfish miner, may be multiple selfish miners
+                            if this_agent.type == "selfish":
                                 winning_block = this_agent
                 else:
                     agent_mine_time = agent.get_block_time(difficulty)
@@ -94,12 +95,6 @@ class BlocktimeOracle:
                     min_time = agent_mine_time
                     winning_block = agent
         return winning_block, winning_agent, min_time
-
-
-
-
-
-
 
     # scrap the entire existing deque and generate a new deque
     def fork_next_time(self) -> (AbstractAgent, float):
@@ -146,6 +141,7 @@ class BlocktimeOracle:
 
 
 if __name__ == "__main__":
-    test_deque = BlocktimeOracle(SelfishAgent(.3), HonestAgent(.7), difficulty=.4)
+    pass
+    test_deque = BlocktimeOracle(SelfishAgent(.3), difficulty=.4)
     for _ in range(10):
         print(test_deque.next_time())

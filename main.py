@@ -1,6 +1,13 @@
 import sys
 import argparse
+import yaml
 
+def parse_config():
+    with open("config.yaml", 'r') as stream:
+        try:
+            print(yaml.safe_load(stream))
+        except yaml.YAMLError as exc:
+            print(exc)
 
 def run():
     program_description = "Selfish Mining Simulator"
@@ -25,4 +32,5 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    # run()
+    parse_config()
