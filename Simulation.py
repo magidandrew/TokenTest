@@ -55,6 +55,16 @@ class Simulator:
     def tuple_to_payload(input_tuple: tuple[AbstractAgent, int]) -> dict:
         return {"agent": input_tuple[0], "pp_size": input_tuple[1]}
 
+    def update_difficulty(self, period_number: int) -> None:
+        self.difficulty = self.difficulty * \
+                          (self.period_lengths[period_number] / (self.WINDOW_SIZE*self.TIME_PER_BLOCK))
+
+    def transmit_difficulty(self):
+        for agent in self.agents:
+            agent.recieve_difficulty(self.difficulty)
+
+
+
     def run(self) -> None:
         # Run this loop for as many periods we want to simulate
         for i in range(self.number_of_periods):
@@ -141,3 +151,6 @@ class Simulator:
                         payload = self.tuple_to_payload(longest_published_chain[0])
                         for (_agent, _pp_size) in longest_published_chain:
                             internal_state[_agent] += payload[_pp_size]
+
+            self.update_difficulty(i)
+            self.transmit_difficulty()

@@ -7,10 +7,11 @@ class SmartAgent(AbstractAgent):
 
     def __init__(self, alpha: float, gamma: float):
         super().__init__(alpha)
-        self.is_mining = True
+        self.is_mining: bool = True
         self.id = super().counter
-        self.type = "smart"
-        self.publish_block = True
+        self.type: str = "smart"
+        self.publish_block: bool = True
+        self.difficulty: float = 1
 
     def get_block_time(self, difficulty: float, alpha=None) -> float:
         if not alpha:
@@ -72,5 +73,14 @@ class SmartAgent(AbstractAgent):
         self.broadcast = None
         self.store_length = 0
         self.mining_queue.empty()
+
+    def recieve_difficulty(self, difficulty: float):
+        if difficulty > self.difficulty:
+            self.is_mining = False
+        else:
+            self.is_mining = True
+        self.difficulty = difficulty
+
+
 
 

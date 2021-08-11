@@ -52,7 +52,11 @@ class AbstractAgent(ABC):
         for block in blocks:
             self.mining_queue.put(block)
 
-    @abstractmethod
     def freeze_lengths(self):
         self.store_length = self.mining_queue.qsize()
+
+    @abstractmethod
+    def recieve_difficulty(self, difficulty: float):
+        pass
+
 

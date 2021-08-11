@@ -54,6 +54,9 @@ class HonestAgent(AbstractAgent):
         self.store_length = 0
         self.mining_queue.empty()
 
+    def recieve_difficulty(self, difficulty: float):
+        pass
+
 
 
 
