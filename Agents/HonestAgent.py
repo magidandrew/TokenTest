@@ -9,7 +9,6 @@ class HonestAgent(AbstractAgent):
         super().__init__(alpha, gamma)
         self.id = super().counter
         self.type = "honest"
-        self.publish_block = False
 
     def get_block_time(self, difficulty: float, alpha=None) -> float:
         if not alpha:
@@ -23,23 +22,7 @@ class HonestAgent(AbstractAgent):
     # def broadcast(self) -> Block:
     #     return self.mining_queue.peek()
 
-    def transmit_blocks(self) -> list[Block]:
-        pass
 
-    def recieve_blocks(self, *kwargs) -> None:
-        pass
-
-    def get_type(self) -> str:
-        pass
-
-    def get_id(self) -> str:
-        pass
-
-    def transmit_ppsize(self):
-        pass
-
-    def length_adjustment(self):
-        pass
 
     def receive_blocks_from_oracle(self, blocks: list[Block]) -> None:
         for block in blocks:
@@ -47,13 +30,31 @@ class HonestAgent(AbstractAgent):
 
         self.publish_block = True
 
+    # def receive_blocks(self, payload: dict) -> None:
+    #     if self.mining_queue.qsize() < payload["pp_size"]:
+    #         self.broadcast = (self, 0)
+    #         self.mining_queue.empty()
+    #     else:
+    #         self.broadcast = (self, self.mining_queue.qsize())
+    #         self.mining_queue.empty()
+
     def receive_blocks(self, payload: dict) -> None:
-        if self.mining_queue.qsize() < payload["pp_size"]:
+        if self.store_length < payload["pp_size"]:
             self.broadcast = (self, 0)
             self.mining_queue.empty()
         else:
             self.broadcast = (self, self.mining_queue.qsize())
             self.mining_queue.empty()
+
+    def reset(self):
+        self.is_mining = True
+        self.is_forking = True
+        self.publish_block = False
+        self.broadcast = None
+        self.store_length = 0
+        self.mining_queue.empty()
+
+
 
 
 

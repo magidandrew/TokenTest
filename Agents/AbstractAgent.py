@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from Agents.AbstractAgent import AbstractAgent
 
@@ -18,13 +17,12 @@ class AbstractAgent(ABC):
         self.mining_queue = Queue()
         self.is_mining = True
         self.broadcast_queue = Queue()
-        self.publish_block = True
+        self.publish_block = False
         self.broadcast = None
         self.is_forking = True
         self.type = None
+        self.store_length = None
         AbstractAgent.counter += 1
-        self.defected_blocks: int = 0
-        self.mined_blocks: int = 0
 
     def __str__(self) -> str:
         return_val = [f"alpha: {self.alpha}", f"type: {self.__class__.__name__}"]
@@ -34,18 +32,16 @@ class AbstractAgent(ABC):
     def get_block_time(self, difficulty: float, alpha: float = None):
         pass
 
+
+
     @abstractmethod
-    def transmit_blocks(self) -> list[Block]:
+    def receive_blocks(self, *kwargs) -> None:
         pass
 
     @abstractmethod
-    def recieve_blocks(self, *kwargs) -> None:
+    def reset(self) -> None:
         pass
 
-    # get_type should only return "selfish", "ism", "honest", etc
-    @abstractmethod
-    def get_type(self) -> str:
-        return self.type
 
     # @abstractmethod
     # def broadcast(self) -> Block:
@@ -56,16 +52,7 @@ class AbstractAgent(ABC):
         for block in blocks:
             self.mining_queue.put(block)
 
-    # FIXME: should some of these methods be defined as __name__ since we are needed names of unique class instances
-    # get_id is a unique specifier of the class instance
     @abstractmethod
-    def get_id(self) -> str:
-        pass
+    def freeze_lengths(self):
+        self.store_length = self.mining_queue.qsize()
 
-    @abstractmethod
-    def transmit_ppsize(self):
-        pass
-
-    @abstractmethod
-    def length_adjustment(self):
-        pass

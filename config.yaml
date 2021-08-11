@@ -1,16 +1,20 @@
 ---
-num_blocks: 1000
+periods: 3
+window_size: 2016
+init_difficulty: 0.2
 debug: false
 export_graphs: true
 # multiple miners will equally split alpha parameter
 # multiple definitions of same "type" of miner allowed to explicitly define the alpha param
 # types: honest, selfish
-miners:
-  honest:
-    num: 1
-    alpha: 0.3
-    gamma: 0.4
-  selfish:
-    num: 1
-    alpha: .7
-    gamma: 0.6
+agents:
+  agent1:
+    honest:
+      num: 1
+      alpha: 0.3
+      gamma: 0.4
+  agent2:
+    selfish:
+      num: 1
+      alpha: 0.7
+      gamma: 0.6

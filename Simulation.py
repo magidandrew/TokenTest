@@ -6,12 +6,12 @@ from Structure.BlocktimeOracle import BlocktimeOracle
 
 class Simulator:
     def __init__(self, **kwargs):
-        self.number_of_periods: int = kwargs['number_of_periods']
+        self.number_of_periods: int = kwargs['periods']
         self.agents: list[AbstractAgent] = kwargs['agents']
 
         self.WINDOW_SIZE: int = kwargs['window_size']
         self.TIME_PER_BLOCK: float = kwargs['minetime_per_block']
-        self.difficulty: float = kwargs['difficulty']
+        self.difficulty: float = kwargs['init_difficulty']
         self.period_lengths = [0.0 for _ in range(self.number_of_periods)]
 
         self.blockchain: Blockchain = Blockchain()
@@ -19,6 +19,7 @@ class Simulator:
 
     def transmit_block_to_all_agents(self, payload: dict) -> None:
         for agent in self.agents:
+            # this method sets instructions of what the agent will do when get_longest_published_chain is called
             agent.receive_blocks(payload)
 
     def get_longest_published_chain(self) -> list[tuple[AbstractAgent, int]]:
@@ -47,7 +48,7 @@ class Simulator:
         return max_blocks
 
     @staticmethod
-    def explicit_tuple_to_payload(agent: AbstractAgent, pp_size: int) -> dict:
+    def explicit_val_to_payload(agent: AbstractAgent, pp_size: int) -> dict:
         return {"agent": agent, "pp_size": pp_size}
 
     @staticmethod
@@ -70,8 +71,14 @@ class Simulator:
                 if not transmission.winning_agent.publish_block:
                     continue
 
+                # Make the agents remember the lengths of their private chains before publishing begins
+                for agent in self.agents:
+                    agent.freeze_lengths()
+
+                # Pops the transmitted block from the mining queue of the agent
                 transmission.winning_agent.mining_queue.get()
 
+                # Payload variable is passed around between recieve and transmit.
                 payload = {"agent": transmission.winning_agent, "pp_size": 1}
 
                 # set internal state for each time-step to 0's
@@ -80,11 +87,15 @@ class Simulator:
                 internal_state[payload["agent"]] = 1
 
                 # defected blocks - these will be added to the honest agent wins at the end of the do-while
+                # FIXME: This only applies to 2-agent cases
                 defector_blocks: int = 0
 
                 # do-while
                 while True:
+                    # Send all agents the most recent payload
                     self.transmit_block_to_all_agents(payload)
+
+                    # Collect published chains from each agent and select the longest one
                     longest_published_chain: list[tuple[AbstractAgent, int]] = self.get_longest_published_chain()
 
                     # base case
@@ -92,6 +103,7 @@ class Simulator:
                     # TODO: make sure this isn't buggy...
                     INT_POSITION = 1
                     if longest_published_chain == [x for x in longest_published_chain if x[INT_POSITION] == 0]:
+
                         # return the longest chain(s); will be used to create forks otherwise
                         longest_state_chains: list[tuple[AbstractAgent, int]] = self.get_longest_internal_chain(
                             internal_state)
@@ -99,6 +111,8 @@ class Simulator:
                         # If the longest chain is unique; no need to fork
                         if len(longest_state_chains) == 1:
                             payload = self.tuple_to_payload(next(iter(longest_state_chains)))
+                            # At this point of the code we have the winner. Make some blockchain update here.
+                            break
 
                         # If longest chain not unique, we must fork to establish a winner
                         elif len(longest_state_chains) > 1:
@@ -114,9 +128,16 @@ class Simulator:
                             internal_state[winning_chain_agent] += 1
 
                             # fork will only have one winner, hence the 1
-                            payload = self.explicit_tuple_to_payload(winning_chain_agent, 1)
+                            payload = self.explicit_val_to_payload(winning_chain_agent, 1)
 
                         # error-handling
                         else:
                             raise (Exception(f"longest_state_chains: {len(longest_state_chains)}. Value"
                                              f"must be greater than 0."))
+
+                        # TODO: When y
+                    # If each entry in the longest chain isn't a pp_size of zero:
+                    else:
+                        payload = self.tuple_to_payload(longest_published_chain[0])
+                        for (_agent, _pp_size) in longest_published_chain:
+                            internal_state[_agent] += payload[_pp_size]
