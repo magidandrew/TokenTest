@@ -12,7 +12,7 @@ from Structure.Block import Block
 
 
 class BlocktimeOracle:
-    INIT_SIZE = 100
+    INIT_SIZE = 500
 
     def __init__(self, agents: list[AbstractAgent], difficulty):
         self.difficulty: float = difficulty
@@ -202,10 +202,14 @@ class BlocktimeOracle:
 
     def peek_right(self) -> (AbstractAgent, float):
         # lookup O(1)
+        if self.__is_empty():
+            self.remake()
         return self.allTimes[-1]
 
     def peek_left(self) -> (AbstractAgent, float):
         # lookup O(1)
+        if self.__is_empty():
+            self.remake()
         return self.allTimes[0]
 
 

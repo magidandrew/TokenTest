@@ -1,9 +1,9 @@
 ---
-periods: 1
+periods: 10
 window_size: 2016
 init_difficulty: 1
 expected_block_time: 10  # in min
-debug: true
+debug: false
 export_graphs: false
 
 # multiple miners will equally split alpha parameter
@@ -13,10 +13,10 @@ agents:
   agent1:
     honest:
       num: 1
-      alpha: 0.99
-      gamma: 0.75
+      alpha: 0.75
+      gamma: 0.80
   agent2:
     selfish:
       num: 1
-      alpha: 0.01
-      gamma: 0.25
+      alpha: 0.25
+      gamma: 0.20

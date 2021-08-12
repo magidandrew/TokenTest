@@ -58,14 +58,26 @@ class Simulator:
     def tuple_to_payload(input_tuple: tuple[AbstractAgent, int]) -> dict:
         return {"agent": input_tuple[0], "pp_size": input_tuple[1]}
 
-    def update_difficulty(self, period_number: int) -> None:
+    def update_difficulty(self, period_index: int) -> None:
+        period_time = self.period_lengths[period_index]
+        # if period_index > 0:
+        #     period_time: float = self.period_lengths[period_index] - self.period_lengths[period_index - 1]
+
         self.difficulty = self.difficulty * \
-                          (self.period_lengths[period_number] / (self.WINDOW_SIZE * self.TIME_PER_BLOCK))
+                          ((self.WINDOW_SIZE * self.TIME_PER_BLOCK)/period_time)
+
+    # must be run at every period iteration
+    def decum_periods(self, period_index: int):
+        prev_sum: float = 0.0
+        for index in range(period_index):
+            prev_sum += self.period_lengths[index]
+        if period_index > 0:
+            self.period_lengths[period_index] -= prev_sum
 
     def transmit_difficulty(self):
         for agent in self.agents:
             agent.receive_difficulty(self.difficulty)
-            
+
     def reset_all_broadcast(self):
         for agent in self.agents:
             agent.reset_broadcast()
@@ -109,6 +121,7 @@ class Simulator:
 
                 # defected blocks - these will be added to the honest agent wins at the end of the do-while
                 # FIXME: This only applies to 2-agent cases
+                # TODO: Look at internal state and count every entry that is not the max to get the defector blocks
                 defector_blocks: int = 0
 
                 # do-while
@@ -175,8 +188,12 @@ class Simulator:
                         payload = self.tuple_to_payload(next(iter(longest_published_chain)))
                         internal_state[payload["agent"]] += payload["pp_size"]
 
+            self.decum_periods(period_index)
+            print(self.period_lengths[period_index])
+            self.update_difficulty(period_index)
+            self.transmit_difficulty()
 
-
+            print(str(self.difficulty))
 
             honest_win: int = 0
             selfish_win: int = 0
@@ -187,13 +204,10 @@ class Simulator:
                     honest_win += 1
             print(f"honest win: {honest_win}")
             print(f"selfish win: {selfish_win}")
-            print(self.blockchain)
+            # print(self.blockchain)
 
             print("______________________")
 
         for _ in range(self.number_of_periods):
             print("Period " + str(_) + " time: " + str(self.period_lengths[_]))
             print("_____________________________________")
-
-            # self.update_difficulty(period_index)
-            # self.transmit_difficulty()

@@ -16,6 +16,7 @@ class SelfishAgent(AbstractAgent):
     def get_block_time(self, difficulty: float, alpha=None) -> float:
         if not alpha:
             alpha = self.alpha
+        #     FIXME: this 10 is a config var 'expected_block_time'
         difficulty_scaling = 10 * difficulty
         return np.random.exponential(1 / alpha * difficulty_scaling)
 
