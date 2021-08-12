@@ -118,6 +118,8 @@ class BlocktimeOracle:
 
                 # Now increment the length of the claimed private chain
                 transmission.winning_agent.store_length += 1
+                transmission.winning_agent.delta += 1
+
                 transmission.winning_agent.receive_blocks_from_oracle([transmission])
                 lg.debug(str(transmission.winning_agent) + " found a block in the meantime")
 

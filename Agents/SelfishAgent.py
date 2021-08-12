@@ -55,6 +55,7 @@ class SelfishAgent(AbstractAgent):
         # if payload["agent"] == self
         #     self.broadcast(self.id, 0)
 
+        #The multi-agent thing
         if self.store_length < payload["pp_size"]:
             self.broadcast = (self, 0)
             self.mining_queue.queue.clear()

@@ -18,6 +18,7 @@ class Simulator:
 
         self.blockchain: Blockchain = Blockchain()
         self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(agents=self.agents, difficulty=self.difficulty)
+        self.orphan_blocks = {_: {"selfish": 0, "honest": 0} for _ in range(self.number_of_periods)}
 
     # this method sets instructions of what the agent will do when get_longest_published_chain is called
     def transmit_block_to_all_agents(self, payload: dict) -> None:
@@ -84,6 +85,7 @@ class Simulator:
 
     def run(self) -> None:
         # Run this loop for as many periods we want to simulate
+
         for period_index in range(self.number_of_periods):
             self.period_lengths[period_index] = 0.0
 
@@ -106,6 +108,7 @@ class Simulator:
                 for agent in self.agents:
                     agent.freeze_lengths()
                     agent.delta = agent.store_length
+
 
                 # Pops the transmitted block from the mining queue of the agent
                 # should always be non_empty
@@ -148,16 +151,42 @@ class Simulator:
                             # payload = self.tuple_to_payload(next(iter(longest_state_chains)))
                             # At this point of the code we have the winner.
                             # TODO: Pass in time information of the blocks
+                            # FIXME: This renders the blockchain class useless. Restructure
                             winner: list[tuple[AbstractAgent, int]] = self.get_longest_internal_chain(internal_state)
-                            for _ in range(next(iter(winner))[1]):
+                            # Defector_blocks is zero when the winner is selfish
+                            for _ in range(next(iter(winner))[1] - defector_blocks):
                                 self.blockchain.add_block(Block(winning_agent=next(iter(winner[0]))))
+
+
+
+                            # --------------------------
+                            # Extract the honest agent object
+                            # FIXME: this is just so so bad
+                            other_agent = None
+                            for agent in self.agents:
+                                if agent != winner[0]:
+                                    other_agent = agent
+                            assert(other_agent != None)
+                            # --------------------------
+                            # Only triggered when the winner is selfish
+                            for _ in range(defector_blocks):
+                                self.blockchain.add_block(Block(winning_agent=other_agent))
 
                             # Update the period time with the latest block time from the Blocktime Oracle
                             self.period_lengths[period_index] = self.blocktime_oracle.current_time
+                            
+                            # get orphan blocks by reading internal state of all other agents
+                            for agent in self.agents:
+                                if agent != next(iter(winner))[0]:
+                                    # self.orphan_blocks[period_index][agent.type] += agent.store_length
+                                    self.orphan_blocks[period_index][agent.type] += internal_state[agent]
+                                    # assert(agent.store_length == internal_state[agent])
+
 
                             # Set all agent variables to their default values
                             for agent in self.agents:
-                                agent.reset()
+                                agent.reset()                                
+
                             break
 
                         # If longest chain not unique, we must fork to establish a winner
@@ -182,7 +211,6 @@ class Simulator:
                             raise (Exception(f"longest_state_chains: {len(longest_state_chains)}. Value"
                                              f"must be greater than 0."))
 
-                        # TODO: When y
                     # If each entry in the longest chain isn't a pp_size of zero:
                     else:
                         payload = self.tuple_to_payload(next(iter(longest_published_chain)))
@@ -198,7 +226,7 @@ class Simulator:
             honest_win: int = 0
             selfish_win: int = 0
             for _ in range(len(self.blockchain)):
-                if self.blockchain.pop().winning_agent.id == 0:
+                if self.blockchain.pop().winning_agent.type == "selfish":
                     selfish_win += 1
                 else:
                     honest_win += 1
@@ -210,4 +238,7 @@ class Simulator:
 
         for _ in range(self.number_of_periods):
             print("Period " + str(_) + " time: " + str(self.period_lengths[_]))
+            print("Orphans " + str(_) + " Selfish: " + str(self.orphan_blocks[_]["selfish"]))
+            print("Orphans " + str(_) + " Honest: " + str(self.orphan_blocks[_]["honest"]))
+
             print("_____________________________________")
