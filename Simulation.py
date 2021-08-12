@@ -2,6 +2,8 @@
 from Agents.AbstractAgent import AbstractAgent
 from Structure.Blockchain import Blockchain
 from Structure.BlocktimeOracle import BlocktimeOracle
+from Structure.Block import Block
+import logging as lg
 
 
 class Simulator:
@@ -10,17 +12,19 @@ class Simulator:
         self.agents: list[AbstractAgent] = kwargs['agents']
 
         self.WINDOW_SIZE: int = kwargs['window_size']
-        self.TIME_PER_BLOCK: float = kwargs['minetime_per_block']
+        self.TIME_PER_BLOCK: float = kwargs['expected_block_time']
         self.difficulty: float = kwargs['init_difficulty']
         self.period_lengths = [0.0 for _ in range(self.number_of_periods)]
 
         self.blockchain: Blockchain = Blockchain()
-        self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(difficulty=self.difficulty)
+        self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(agents=self.agents, difficulty=self.difficulty)
 
+    # this method sets instructions of what the agent will do when get_longest_published_chain is called
     def transmit_block_to_all_agents(self, payload: dict) -> None:
         for agent in self.agents:
-            # this method sets instructions of what the agent will do when get_longest_published_chain is called
-            agent.receive_blocks(payload)
+            # do not transmit to the original sender
+            if agent != payload["agent"]:
+                agent.receive_blocks(payload)
 
     def get_longest_published_chain(self) -> list[tuple[AbstractAgent, int]]:
         POSITION_OF_LEN = 1
@@ -35,17 +39,16 @@ class Simulator:
 
         # find pp_size maxes
         # structure: [ (agent, int), ... , (agent, int)]
-        max_len = max(received_blocks, key=lambda x: len(x[POSITION_OF_LEN]))  # len of transmitted blocks is pp_size
+        max_len = max(received_blocks, key=lambda x: x[POSITION_OF_LEN])  # len of transmitted blocks is pp_size
 
-        max_blocks = [x for x in received_blocks if len(x[POSITION_OF_LEN]) == max_len[POSITION_OF_LEN]]
+        max_blocks = [x for x in received_blocks if x[POSITION_OF_LEN] == max_len[POSITION_OF_LEN]]
         return max_blocks
 
     def get_longest_internal_chain(self, internal_state: dict) -> list[tuple[AbstractAgent, int]]:
         max_len: int = internal_state[
             max(internal_state, key=lambda x: internal_state[x])]  # len of transmitted blocks is pp_size
 
-        max_agent_len_tuples = [x for x in internal_state if internal_state[x] == ma]
-        return max_blocks
+        return [(x, internal_state[x]) for x in internal_state if internal_state[x] == max_len]
 
     @staticmethod
     def explicit_val_to_payload(agent: AbstractAgent, pp_size: int) -> dict:
@@ -57,24 +60,30 @@ class Simulator:
 
     def update_difficulty(self, period_number: int) -> None:
         self.difficulty = self.difficulty * \
-                          (self.period_lengths[period_number] / (self.WINDOW_SIZE*self.TIME_PER_BLOCK))
+                          (self.period_lengths[period_number] / (self.WINDOW_SIZE * self.TIME_PER_BLOCK))
 
     def transmit_difficulty(self):
         for agent in self.agents:
-            agent.recieve_difficulty(self.difficulty)
-
-
+            agent.receive_difficulty(self.difficulty)
+            
+    def reset_all_broadcast(self):
+        for agent in self.agents:
+            agent.reset_broadcast()
 
     def run(self) -> None:
         # Run this loop for as many periods we want to simulate
-        for i in range(self.number_of_periods):
-            self.period_lengths[i] = 0.0
+        for period_index in range(self.number_of_periods):
+            self.period_lengths[period_index] = 0.0
 
             # Keep looping until the length of the blockchain is equal to the window size.
             while len(self.blockchain) < self.WINDOW_SIZE:
-                transmission = self.blocktime_oracle.next_time()
-                self.period_lengths[i] = transmission.mining_time
+
+                transmission: Block = self.blocktime_oracle.next_time()
+                self.period_lengths[period_index] = transmission.timestamp
                 # agent needs to be aware of the block they mined
+
+                lg.debug("winner: " + transmission.winning_agent.__str__())
+
                 transmission.winning_agent.receive_blocks_from_oracle([transmission])
 
                 # if the agent chooses to transmit it publicly to the rest of the miners, we trigger the while loop
@@ -84,11 +93,13 @@ class Simulator:
                 # Make the agents remember the lengths of their private chains before publishing begins
                 for agent in self.agents:
                     agent.freeze_lengths()
+                    agent.delta = agent.store_length
 
                 # Pops the transmitted block from the mining queue of the agent
-                transmission.winning_agent.mining_queue.get()
+                # should always be non_empty
+                transmission.winning_agent.mining_queue.get_nowait()
 
-                # Payload variable is passed around between recieve and transmit.
+                # Payload variable is passed around between receive and transmit.
                 payload = {"agent": transmission.winning_agent, "pp_size": 1}
 
                 # set internal state for each time-step to 0's
@@ -102,6 +113,7 @@ class Simulator:
 
                 # do-while
                 while True:
+                    self.reset_all_broadcast()
                     # Send all agents the most recent payload
                     self.transmit_block_to_all_agents(payload)
 
@@ -120,14 +132,26 @@ class Simulator:
 
                         # If the longest chain is unique; no need to fork
                         if len(longest_state_chains) == 1:
-                            payload = self.tuple_to_payload(next(iter(longest_state_chains)))
-                            # At this point of the code we have the winner. Make some blockchain update here.
+                            # payload = self.tuple_to_payload(next(iter(longest_state_chains)))
+                            # At this point of the code we have the winner.
+                            # TODO: Pass in time information of the blocks
+                            winner: list[tuple[AbstractAgent, int]] = self.get_longest_internal_chain(internal_state)
+                            for _ in range(next(iter(winner))[1]):
+                                self.blockchain.add_block(Block(winning_agent=next(iter(winner[0]))))
+
+                            # Update the period time with the latest block time from the Blocktime Oracle
+                            self.period_lengths[period_index] = self.blocktime_oracle.current_time
+
+                            # Set all agent variables to their default values
+                            for agent in self.agents:
+                                agent.reset()
                             break
 
                         # If longest chain not unique, we must fork to establish a winner
                         elif len(longest_state_chains) > 1:
                             winning_chain_agent, winning_agent, min_time = self.blocktime_oracle.fork(self.difficulty,
                                                                                                       self.agents)
+                            lg.debug("fork winner: " + winning_agent.__str__())
                             # winning_agent could be honest(defector), winning_chain_agent is selfish
                             # defectors won. ex: honest win, but selfish-miner keeps his mined block
                             if winning_chain_agent != winning_agent:
@@ -148,9 +172,28 @@ class Simulator:
                         # TODO: When y
                     # If each entry in the longest chain isn't a pp_size of zero:
                     else:
-                        payload = self.tuple_to_payload(longest_published_chain[0])
-                        for (_agent, _pp_size) in longest_published_chain:
-                            internal_state[_agent] += payload[_pp_size]
+                        payload = self.tuple_to_payload(next(iter(longest_published_chain)))
+                        internal_state[payload["agent"]] += payload["pp_size"]
 
-            self.update_difficulty(i)
-            self.transmit_difficulty()
+
+
+
+            honest_win: int = 0
+            selfish_win: int = 0
+            for _ in range(len(self.blockchain)):
+                if self.blockchain.pop().winning_agent.type == "selfish":
+                    selfish_win += 1
+                else:
+                    honest_win += 1
+            print(f"honest win: {honest_win}")
+            print(f"selfish win: {selfish_win}")
+            print(self.blockchain)
+
+            print("______________________")
+
+        for _ in range(self.number_of_periods):
+            print("Period " + str(_) + " time: " + str(self.period_lengths[_]))
+            print("_____________________________________")
+
+            # self.update_difficulty(period_index)
+            # self.transmit_difficulty()

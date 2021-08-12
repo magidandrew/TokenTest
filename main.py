@@ -2,7 +2,9 @@ import sys
 import argparse
 import yaml
 from Structure.AgentFactory import agentFactory
+from Simulation import Simulator
 from pathlib import Path
+import logging as lg
 
 
 def parse_config(config_path: Path):
@@ -19,6 +21,7 @@ def parse_config(config_path: Path):
         init_difficulty: float = config_values["init_difficulty"]
         debug: bool = config_values["debug"]
         export_graphs: bool = config_values["export_graphs"]
+        expected_block_time: float = config_values["expected_block_time"]
 
         sim_agents = []
 
@@ -45,15 +48,16 @@ def parse_config(config_path: Path):
                 "agents": sim_agents,
                 "init_difficulty": init_difficulty,
                 "debug": debug,
-                "export_graphs": export_graphs
+                "export_graphs": export_graphs,
+                "expected_block_time": expected_block_time
                 }
 
 
 def parse_args() -> Path:
-    # FIXME: update program description when close to being finished
+    # TODO: update program description when close to being finished
     program_description = "Selfish Mining Simulator."
     parser = argparse.ArgumentParser(description=program_description)
-    parser.add_argument('-c', '--config', required=False, type=str, help="YAML config file as str."
+    parser.add_argument('-c', '--config', required=False, type=str, help="YAML config file name as str."
                                                                          "Defaults to \'config.yaml\' if not specified.")
     args = parser.parse_args()
 
@@ -67,9 +71,21 @@ def parse_args() -> Path:
 
 
 def run():
+    # get path of config file
     config_path: Path = parse_args()
+    # get config from file
     sim_config: dict = parse_config(config_path)
-    print(sim_config)
+
+    # set debug
+    if sim_config["debug"]:
+        lg.basicConfig(level=lg.DEBUG)
+
+    lg.debug(sim_config)
+
+    # initialize simulator from config
+    sim: Simulator = Simulator(**sim_config)
+    # run
+    sim.run()
 
 
 if __name__ == "__main__":

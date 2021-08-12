@@ -1,4 +1,5 @@
 import math
+import logging as lg
 
 import numpy as np
 
@@ -13,15 +14,15 @@ from Structure.Block import Block
 class BlocktimeOracle:
     INIT_SIZE = 100
 
-    def __init__(self, *agents: AbstractAgent, difficulty):
+    def __init__(self, agents: list[AbstractAgent], difficulty):
         self.difficulty: float = difficulty
         self.agents = agents
         # TODO: Do we actually need this?
-        self.__current_time = 0.0
+        self.current_time = 0.0
 
-        self.extend()
+        self.remake()
 
-    def extend(self, fork_delta: float = 0.0):
+    def remake(self):
         all_times_arr = []
 
         # Iterate over each agent and create mining times
@@ -32,8 +33,8 @@ class BlocktimeOracle:
             agent_times = np.cumsum(agent_times)
 
             # Start the times from when we last left off
-            self.__current_time += fork_delta
-            agent_times = agent_times + self.__current_time
+            # self.current_time += fork_delta
+            agent_times = agent_times + self.current_time
             # agent_times = agent_times + fork_delta
 
             # Mark each time with the agent that created it
@@ -53,20 +54,20 @@ class BlocktimeOracle:
 
     def next_time(self) -> Block:
         if self.__is_empty():
-            self.extend()
-        self.__current_time = self.peek_left()[1]  # must index the time in the tuple, hence [1]
+            self.remake()
+        self.current_time = self.peek_left()[1]  # must index the time in the tuple, hence [1]
         winning_agent, mining_time = self.allTimes.popleft()
         transmission = Block(mining_timestamp=mining_time,
-                             # FIXME: this needs to be accounted for
-                             timestamp_of_last_block= 0.0,
+                             # # FIXME: this needs to be accounted for
+                             # timestamp_of_last_block= 0.0,
                              # timestamp_of_last_block=self.blockchain.get_global_time_of_chain(),
                              winning_agent=winning_agent)
         return transmission
 
-    def fork(self, difficulty: float, agents: list[AbstractAgent]) -> tuple[AbstractAgent, AbstractAgent, float]:
+    def fork(self, difficulty: float, agents: list[AbstractAgent],) -> tuple[AbstractAgent, AbstractAgent, float]:
         min_time = math.inf
-        winning_agent = None   #
-        winning_block = None
+        winning_agent = None
+        winning_chain_agent = None
 
         for agent in agents:
             if not agent.is_forking:
@@ -76,21 +77,24 @@ class BlocktimeOracle:
                 agent_mine_time_1 = agent.get_block_time(difficulty, alpha=agent.gamma * agent.alpha)  # honest
                 agent_mine_time_2 = agent.get_block_time(difficulty, alpha=(1 - agent.gamma)*agent.alpha) #defectors
 
+
                 # If the produced times are better than the current recording min_time
                 if min(agent_mine_time_1, agent_mine_time_2) < min_time:
 
                     # honest agents won over the defectors
                     if agent_mine_time_1 < agent_mine_time_2:
-                        winning_block = agent
+                        winning_chain_agent = agent
+                        winning_agent = agent
                         min_time = agent_mine_time_1
 
                     # Defectors won
                     else:
                         min_time = agent_mine_time_2
+                        winning_agent = agent
                         # Loop through the agents and choose the other
                         for _agent in agents:
                             if _agent.type != "honest":
-                                winning_block = _agent
+                                winning_chain_agent = _agent
 
             # Otherwise the agent is selfish
             else:
@@ -99,20 +103,28 @@ class BlocktimeOracle:
                 if agent_mine_time < min_time:
                     min_time = agent_mine_time
                     winning_agent = agent
-                    winning_block = agent
+                    winning_chain_agent = agent
 
             # add the time to the blockchain oracle global time counter
-            self.__current_time += min_time
+            # tab back everything that follows
+        self.current_time += min_time
 
-            while self.peek_left() <= self.__current_time:
-                transmission: Block = self.blocktime_oracle.next_time()
-                if not transmission.winning_agent.is_forking:
-                    transmission.winning_agent.receive_blocks_from_oracle([transmission])
+        # If a miner is not participating in the fork, they can mine in the meantime.
+        # [1] bc we want the float, not the miner
+        while self.peek_left()[1] <= self.current_time:
+            transmission: Block = self.next_time()
+            if not transmission.winning_agent.is_forking:
+                transmission.winning_agent.receive_blocks_from_oracle([transmission])
 
-            # reset the deque of times
-            self.extend()
+                # Now increment the length of the claimed private chain
+                transmission.winning_agent.store_length += 1
+                transmission.winning_agent.receive_blocks_from_oracle([transmission])
+                lg.debug(str(transmission.winning_agent) + " found a block in the meantime")
 
-        return winning_block, winning_agent, min_time
+        # reset the deque of times
+        self.remake()
+
+        return winning_chain_agent, winning_agent, min_time
 
 
 
@@ -183,7 +195,7 @@ class BlocktimeOracle:
 
     def reset(self) -> (AbstractAgent, float):
         self.allTimes.clear()
-        self.extend()
+        self.remake()
 
     def __is_empty(self) -> bool:
         return True if len(self.allTimes) == 0 else False

@@ -1,6 +1,7 @@
 from Agents.AbstractAgent import AbstractAgent
 from Structure.Block import Block
 import numpy as np
+import logging as lg
 
 
 class SelfishAgent(AbstractAgent):
@@ -9,13 +10,15 @@ class SelfishAgent(AbstractAgent):
         self.id = super().counter
         self.type = "selfish"
         self.publish_block = False
-
+        self.broadcast = (self, 0)
+        self.delta = 0
 
     def get_block_time(self, difficulty: float, alpha=None) -> float:
         if not alpha:
             alpha = self.alpha
         difficulty_scaling = 10 * difficulty
         return np.random.exponential(1 / alpha * difficulty_scaling)
+
     # def get_type(self):
     #     return str(self.type) + "_" + str(self.id)
 
@@ -27,8 +30,6 @@ class SelfishAgent(AbstractAgent):
             self.mining_queue.put(block)
 
         self.publish_block = False
-
-
 
     # def receive_blocks(self, payload: dict) -> None:
     #     if self.mining_queue.qsize() < payload["pp_size"]:
@@ -48,37 +49,36 @@ class SelfishAgent(AbstractAgent):
     #             self.mining_queue.get()
     #             self.is_forking = False
 
+    # FIXME: broadcast should be set in another function otherwise the setting and recving is done in one place
     def receive_blocks(self, payload: dict) -> None:
+        # if payload["agent"] == self
+        #     self.broadcast(self.id, 0)
+
         if self.store_length < payload["pp_size"]:
-            self.broadcast = (self.id, 0)
-            self.mining_queue.empty()
+            self.broadcast = (self, 0)
+            self.mining_queue.queue.clear()
 
         else:
-            delta = self.store_length - payload["pp_size"]
+            self.delta -= payload["pp_size"]
+            #delta = self.mining_queue.qsize() - payload["pp_size"]
 
-            if delta <= 1:
+            if self.delta <= 1:
+                # publishes entire attack queue
                 self.broadcast = (self, self.mining_queue.qsize())
-                self.mining_queue.empty()
+                self.mining_queue.queue.clear()
                 self.is_forking = True
 
             else:
                 self.broadcast = (self, 1)
-                self.mining_queue.get()
+                self.mining_queue.get_nowait()
                 self.is_forking = False
-
 
     def reset(self):
         self.is_forking = False
         self.publish_block = False
-        self.broadcast = None
+        self.broadcast = (self, 0)
         self.store_length = 0
-        self.mining_queue.empty()
+        self.mining_queue.queue.clear()
 
-    def recieve_difficulty(self, difficulty: float):
+    def receive_difficulty(self, difficulty: float):
         pass
-
-
-
-
-
-

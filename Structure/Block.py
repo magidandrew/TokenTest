@@ -9,9 +9,9 @@ class Block:
         # time it took to mine the block
         # self.mining_time: float = mining_timestamp - timestamp_of_last_block
         # timestamp is calculated when a block is added to the chain
-        self.timestamp: float = 0
+        self.timestamp: float = 0.0
         # global timestamp at which point a block is expected to be mined at
-        self.estimated_timestamp: float =  mining_timestamp
+        self.cum_timestamp: float = mining_timestamp
         # Agent that won the block
         self.winning_agent: AbstractAgent = winning_agent
 

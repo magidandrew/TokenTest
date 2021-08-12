@@ -1,9 +1,11 @@
 ---
-periods: 3
+periods: 1
 window_size: 2016
-init_difficulty: 0.2
-debug: false
-export_graphs: true
+init_difficulty: 1
+expected_block_time: 10  # in min
+debug: true
+export_graphs: false
+
 # multiple miners will equally split alpha parameter
 # multiple definitions of same "type" of miner allowed to explicitly define the alpha param
 # types: honest, selfish
@@ -11,10 +13,10 @@ agents:
   agent1:
     honest:
       num: 1
-      alpha: 0.3
-      gamma: 0.4
+      alpha: 0.99
+      gamma: 0.75
   agent2:
     selfish:
       num: 1
-      alpha: 0.7
-      gamma: 0.6
+      alpha: 0.01
+      gamma: 0.25

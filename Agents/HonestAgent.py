@@ -9,6 +9,8 @@ class HonestAgent(AbstractAgent):
         super().__init__(alpha, gamma)
         self.id = super().counter
         self.type = "honest"
+        self.broadcast = (self.id, 0)
+        self.is_forking = True
 
     def get_block_time(self, difficulty: float, alpha=None) -> float:
         if not alpha:
@@ -41,20 +43,22 @@ class HonestAgent(AbstractAgent):
     def receive_blocks(self, payload: dict) -> None:
         if self.store_length < payload["pp_size"]:
             self.broadcast = (self, 0)
-            self.mining_queue.empty()
+            self.mining_queue.queue.clear()
         else:
             self.broadcast = (self, self.mining_queue.qsize())
-            self.mining_queue.empty()
+            # honest miner will have empty queue after broadcasting
+            # assert(self.mining_queue.qsize() == 0)
+            self.mining_queue.queue.clear()
 
     def reset(self):
         self.is_mining = True
         self.is_forking = True
         self.publish_block = False
-        self.broadcast = None
+        self.broadcast = (self.id, 0)
         self.store_length = 0
-        self.mining_queue.empty()
+        self.mining_queue.queue.clear()
 
-    def recieve_difficulty(self, difficulty: float):
+    def receive_difficulty(self, difficulty: float):
         pass
 
 

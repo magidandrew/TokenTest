@@ -52,10 +52,10 @@ class SmartAgent(AbstractAgent):
 
         if self.store_length < payload["pp_size"]:
             self.broadcast = (self, 0)
-            self.mining_queue.empty()
+            self.mining_queue.queue.clear()
         else:
             self.broadcast = (self, self.mining_queue.qsize())
-            self.mining_queue.empty()
+            self.mining_queue.queue.clear()
 
 
 
@@ -72,9 +72,9 @@ class SmartAgent(AbstractAgent):
         self.publish_block = False
         self.broadcast = None
         self.store_length = 0
-        self.mining_queue.empty()
+        self.mining_queue.queue.clear()
 
-    def recieve_difficulty(self, difficulty: float):
+    def receive_difficulty(self, difficulty: float):
         if difficulty > self.difficulty:
             self.is_mining = False
         else:

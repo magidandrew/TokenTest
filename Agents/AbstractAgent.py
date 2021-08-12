@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from Agents.AbstractAgent import AbstractAgent
 
@@ -21,7 +22,9 @@ class AbstractAgent(ABC):
         self.broadcast = None
         self.is_forking = True
         self.type = None
+        self.id = None
         self.store_length = None
+        self.delta: int = None
         AbstractAgent.counter += 1
 
     def __str__(self) -> str:
@@ -32,8 +35,6 @@ class AbstractAgent(ABC):
     def get_block_time(self, difficulty: float, alpha: float = None):
         pass
 
-
-
     @abstractmethod
     def receive_blocks(self, *kwargs) -> None:
         pass
@@ -41,7 +42,6 @@ class AbstractAgent(ABC):
     @abstractmethod
     def reset(self) -> None:
         pass
-
 
     # @abstractmethod
     # def broadcast(self) -> Block:
@@ -56,7 +56,8 @@ class AbstractAgent(ABC):
         self.store_length = self.mining_queue.qsize()
 
     @abstractmethod
-    def recieve_difficulty(self, difficulty: float):
+    def receive_difficulty(self, difficulty: float):
         pass
 
-
+    def reset_broadcast(self):
+        self.broadcast = (self.id, 0)

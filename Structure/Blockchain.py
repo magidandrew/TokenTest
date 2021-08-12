@@ -5,12 +5,15 @@ class Blockchain:
     def __init__(self):
         self.chain: list[Block] = []
 
+    # def add_block(self, block: Block):
+    #     if len(self.chain) != 0:
+    #         block.timestamp = self.get_global_time_of_chain() + block.mining_time
+    #     # edge case if we are adding genesis block
+    #     else:
+    #         block.timestamp = block.mining_time
+    #     self.chain.append(block)
+
     def add_block(self, block: Block):
-        if len(self.chain) != 0:
-            block.timestamp = self.get_global_time_of_chain() + block.mining_time
-        # edge case if we are adding genesis block
-        else:
-            block.timestamp = block.mining_time
         self.chain.append(block)
 
     def pop(self) -> Block:
