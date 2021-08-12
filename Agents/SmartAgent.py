@@ -6,12 +6,13 @@ from Structure.Block import Block
 class SmartAgent(AbstractAgent):
 
     def __init__(self, alpha: float, gamma: float):
-        super().__init__(alpha)
+        super().__init__(alpha, gamma)
         self.is_mining: bool = True
         self.id = super().counter
         self.type: str = "smart"
         self.publish_block: bool = True
         self.difficulty: float = 1
+        self.broadcast  = (self, 0)
 
     def get_block_time(self, difficulty: float, alpha=None) -> float:
         if not alpha:
@@ -47,18 +48,19 @@ class SmartAgent(AbstractAgent):
     #         self.mining_queue.empty()
 
     def receive_blocks(self, payload: dict) -> None:
+
         if not self.is_mining:
-            return
+            self.broadcast = (self, 0)
+
 
         if self.store_length < payload["pp_size"]:
             self.broadcast = (self, 0)
             self.mining_queue.queue.clear()
         else:
             self.broadcast = (self, self.mining_queue.qsize())
+            # honest miner will have empty queue after broadcasting
+            # assert(self.mining_queue.qsize() == 0)
             self.mining_queue.queue.clear()
-
-
-
 
     def receive_blocks_from_oracle(self, blocks: list[Block]) -> None:
         # If agent is active

@@ -198,7 +198,7 @@ class Simulator:
             honest_win: int = 0
             selfish_win: int = 0
             for _ in range(len(self.blockchain)):
-                if self.blockchain.pop().winning_agent.type == "selfish":
+                if self.blockchain.pop().winning_agent.id == 0:
                     selfish_win += 1
                 else:
                     honest_win += 1
