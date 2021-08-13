@@ -1,5 +1,5 @@
 ---
-periods: 3
+periods: 10
 window_size: 2016
 init_difficulty: 1
 expected_block_time: 10  # in min
@@ -13,10 +13,11 @@ agents:
   agent1:
     honest:
       num: 1
-      alpha: 0.9
+      alpha: 0.7
       gamma: 0.80
   agent2:
     selfish:
       num: 1
-      alpha: 0.1
+      alpha: 0.3
       gamma: 0.20
+

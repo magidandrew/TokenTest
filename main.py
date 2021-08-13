@@ -53,12 +53,13 @@ def parse_config(config_path: Path):
                 }
 
 
-def parse_args() -> Path:
+def parse_args() -> tuple[Path, bool]:
     # TODO: update program description when close to being finished
     program_description = "Selfish Mining Simulator."
     parser = argparse.ArgumentParser(description=program_description)
     parser.add_argument('-c', '--config', required=False, type=str, help="YAML config file name as str."
                                                                          "Defaults to \'config.yaml\' if not specified.")
+    parser.add_argument('-d', '--display', required=False, action="store_true", help="Displays simulation results to stdout.")
     args = parser.parse_args()
 
     # default
@@ -67,12 +68,12 @@ def parse_args() -> Path:
     if args.config is not None:
         config_path: Path = Path(args.config)
 
-    return config_path
+    return config_path, args.display
 
 
 def run():
     # get path of config file
-    config_path: Path = parse_args()
+    config_path, display = parse_args()
     # get config from file
     sim_config: dict = parse_config(config_path)
 
@@ -83,7 +84,7 @@ def run():
     lg.debug(sim_config)
 
     # initialize simulator from config
-    sim: Simulator = Simulator(**sim_config)
+    sim: Simulator = Simulator(**sim_config, display=display)
     # run
     sim.run()
 

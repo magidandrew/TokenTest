@@ -1,8 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Structure.Blockchain import Blockchain
-from Structure.Block import Block
-import utils
 import sys
 
 
@@ -30,10 +27,10 @@ def revenue_cost_time(nb_simulations: int, strat: str, revenue: list, cost: list
     for i in range(len(block_periods)):
         plt.text(i, revenue[i], revenue[i], ha="center", va="bottom")
 
-    plt.xlabel("Epochs ({} blocks / epoch)".format(window_size))
+    plt.xlabel(f"Epochs ({window_size} blocks / epoch)")
     plt.xticks(rotation=15)
     plt.ylabel("Revenue")
-    plt.title("Revenue of {} v.s. Time".format(strat))
+    plt.title(f"Revenue of {strat} v.s. Time")
     plt.legend()
     plt.show()
 
@@ -48,10 +45,10 @@ def revenue_cost_time(nb_simulations: int, strat: str, revenue: list, cost: list
     for i in range(len(block_periods)):
         plt.text(i, cost[i], cost[i], ha="center", va="bottom")
 
-    plt.xlabel("Epochs ({} blocks / epoch)".format(window_size))
+    plt.xlabel(f"Epochs ({window_size} blocks / epoch)")
     plt.xticks(rotation=15)
     plt.ylabel("Cost")
-    plt.title("Cost of {} v.s. Time".format(strat))
+    plt.title(f"Cost of {strat} v.s. Time")
     plt.legend()
     plt.show()
 
@@ -73,11 +70,11 @@ def revenue_cost_time(nb_simulations: int, strat: str, revenue: list, cost: list
     for i in range(len(block_periods)):
         plt.text(i, gross[i], gross[i], ha="center", va="bottom")
 
-    plt.xlabel("Epochs ({} blocks / epoch)".format(window_size))
+    plt.xlabel(f"Epochs ({window_size} blocks / epoch)")
     plt.axhline(y=0, color='black', linestyle='-')
     plt.xticks(rotation=15)
     plt.ylabel("Gross Profit")
-    plt.title("Gross Profit of {} v.s. Time".format(strat))
+    plt.title(f"Gross Profit of {strat} v.s. Time")
     plt.legend()
     plt.show()
 
@@ -110,11 +107,11 @@ def difficulty_time(nb_simulations: int, strat: str, difficulty_list: list, alph
         plt.text(i, difficulty_list[i],
                  difficulty_list[i], ha="right", va="center")
 
-    plt.xlabel("Epochs ({} blocks / epoch)".format(window_size))
+    plt.xlabel(f"Epochs ({window_size} blocks / epoch)")
     plt.xticks(rotation=15)
     plt.axhline(y=1, color='red', linestyle='-')
     plt.ylabel("Mining Difficulty Level")
-    plt.title("Difficulty Level of {} v.s. Time".format(strat))
+    plt.title(f"Difficulty Level of {strat} v.s. Time")
     plt.legend()
     plt.show()
 
@@ -143,7 +140,7 @@ def alpha_revenue(strat: str, revenue_mean_list: list, cost_mean_list: list, alp
     plt.xlabel("Alpha level (Percentage)")
     plt.xticks(np.arange(min(alpha_list), max(alpha_list)+0.1, 0.1))
     plt.ylabel("Revenue (Blocks)")
-    plt.title("Revenue of {} v.s. Alpha Level".format(strat))
+    plt.title(f"Revenue of {strat} v.s. Alpha Level")
     plt.legend()
     plt.show()
 
@@ -158,7 +155,7 @@ def alpha_revenue(strat: str, revenue_mean_list: list, cost_mean_list: list, alp
     plt.xlabel("Alpha level (Percentage)")
     plt.xticks(np.arange(min(alpha_list), max(alpha_list)+0.1, 0.1))
     plt.ylabel("Cost (Blocks)")
-    plt.title("Cost of {} v.s. Alpha Level".format(strat))
+    plt.title(f"Cost of {strat} v.s. Alpha Level")
     plt.legend()
     plt.show()
 
@@ -174,7 +171,7 @@ def alpha_revenue(strat: str, revenue_mean_list: list, cost_mean_list: list, alp
 
     plt.xlabel("Alpha level (Percentage)")
     plt.ylabel("Gross Profit (Blocks)")
-    plt.title("Gross Profit of {} v.s. Alpha Level".format(strat))
+    plt.title(f"Gross Profit of {strat} v.s. Alpha Level")
     plt.legend()
     plt.show()
 
@@ -190,6 +187,6 @@ def alpha_revenue(strat: str, revenue_mean_list: list, cost_mean_list: list, alp
 
     plt.xlabel("Alpha level (Percentage)")
     plt.ylabel("Gross Profit/TH (Blocks/Total Hash)")
-    plt.title("Gross Profit/Total Hash Power of {} v.s. Alpha Level".format(strat))
+    plt.title(f"Gross Profit/Total Hash Power of {strat} v.s. Alpha Level")
     plt.legend()
     plt.show()

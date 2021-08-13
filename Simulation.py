@@ -1,26 +1,31 @@
 # from Structure.SmartAgent import SmartAgent
-import Structure.Result
 from Agents.AbstractAgent import AbstractAgent
 from Structure.Blockchain import Blockchain
 from Structure.BlocktimeOracle import BlocktimeOracle
 from Structure.Block import Block
 import logging as lg
-
+from Structure.Result import SimResult
+from tqdm import tqdm
 
 class Simulator:
-    def __init__(self, **kwargs):
+    def __init__(self, display: bool, **kwargs):
         self.number_of_periods: int = kwargs['periods']
         self.agents: list[AbstractAgent] = kwargs['agents']
 
         self.WINDOW_SIZE: int = kwargs['window_size']
         self.TIME_PER_BLOCK: float = kwargs['expected_block_time']
         self.difficulty: float = kwargs['init_difficulty']
+        self.display: bool = display
         self.period_lengths = [0.0 for _ in range(self.number_of_periods)]
 
         self.blockchain: Blockchain = Blockchain()
         self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(agents=self.agents, difficulty=self.difficulty)
         self.orphan_blocks = {_: {"selfish": 0, "honest": 0} for _ in range(self.number_of_periods)}
         self.difficulties: list[float] = []
+        self.BLOCK_REWARD: float = 6.25
+        self.COIN_VALUE: float = 45038.0
+        self.COST_PER_BLOCK: float = 9000.0
+        self.selfish_blocks =[0 for _ in range(self.number_of_periods)]
 
     # this method sets instructions of what the agent will do when get_longest_published_chain is called
     def transmit_block_to_all_agents(self, payload: dict) -> None:
@@ -67,7 +72,7 @@ class Simulator:
         #     period_time: float = self.period_lengths[period_index] - self.period_lengths[period_index - 1]
 
         self.difficulty = self.difficulty * \
-                          ((self.WINDOW_SIZE * self.TIME_PER_BLOCK)/period_time)
+                          ((self.WINDOW_SIZE * self.TIME_PER_BLOCK) / period_time)
 
     # must be run at every period iteration
     def decum_periods(self, period_index: int):
@@ -85,10 +90,40 @@ class Simulator:
         for agent in self.agents:
             agent.reset_broadcast()
 
+    from Agents.SelfishAgent import SelfishAgent
+
+    def get_selfish_agent(self) -> SelfishAgent:
+        for agent in self.agents:
+            if agent.type == "selfish":
+                return agent
+
+    def get_reward_leak(self) -> float:
+        blocks_mined_if_honest: float = self.get_selfish_agent().alpha * self.number_of_periods * self.WINDOW_SIZE
+        print(f"blocks_if_honest: {blocks_mined_if_honest}")
+
+        blocks_mined: int = 0
+        for i in range(self.number_of_periods):
+            blocks_mined += self.selfish_blocks[i]
+        print(f"selfish_blocks {blocks_mined}")
+
+        reward_leak = (blocks_mined - blocks_mined_if_honest) * self.BLOCK_REWARD * self.COIN_VALUE
+        return reward_leak
+
+    def get_wasted_power(self) -> float:
+        total_orphans: int = 0
+        for _ in self.orphan_blocks:
+            total_orphans += self.orphan_blocks[_]["selfish"]
+            total_orphans += self.orphan_blocks[_]["honest"]
+
+        wasted_power = total_orphans * self.COST_PER_BLOCK
+
+        return wasted_power
+
     def run(self) -> None:
         # Run this loop for as many periods we want to simulate
 
-        for period_index in range(self.number_of_periods):
+        iterations = list(range(self.number_of_periods))
+        for period_index in tqdm(iterations):
             self.period_lengths[period_index] = 0.0
 
             # Keep looping until the length of the blockchain is equal to the window size.
@@ -110,7 +145,6 @@ class Simulator:
                 for agent in self.agents:
                     agent.freeze_lengths()
                     agent.delta = agent.store_length
-
 
                 # Pops the transmitted block from the mining queue of the agent
                 # should always be non_empty
@@ -159,8 +193,6 @@ class Simulator:
                             for _ in range(next(iter(winner))[1] - defector_blocks):
                                 self.blockchain.add_block(Block(winning_agent=next(iter(winner[0]))))
 
-
-
                             # --------------------------
                             # Extract the honest agent object
                             # FIXME: this is just so so bad
@@ -168,7 +200,7 @@ class Simulator:
                             for agent in self.agents:
                                 if agent != winner[0]:
                                     other_agent = agent
-                            assert(other_agent != None)
+                            assert (other_agent != None)
                             # --------------------------
                             # Only triggered when the winner is selfish
                             for _ in range(defector_blocks):
@@ -176,7 +208,7 @@ class Simulator:
 
                             # Update the period time with the latest block time from the Blocktime Oracle
                             self.period_lengths[period_index] = self.blocktime_oracle.current_time
-                            
+
                             # get orphan blocks by reading internal state of all other agents
                             for agent in self.agents:
                                 if agent != next(iter(winner))[0]:
@@ -184,10 +216,9 @@ class Simulator:
                                     self.orphan_blocks[period_index][agent.type] += internal_state[agent]
                                     # assert(agent.store_length == internal_state[agent])
 
-
                             # Set all agent variables to their default values
                             for agent in self.agents:
-                                agent.reset()                                
+                                agent.reset()
 
                             break
 
@@ -219,32 +250,39 @@ class Simulator:
                         internal_state[payload["agent"]] += payload["pp_size"]
 
             self.decum_periods(period_index)
-            print(self.period_lengths[period_index])
+            # print(self.period_lengths[period_index])
             self.update_difficulty(period_index)
             self.transmit_difficulty()
 
-            print(str(self.difficulty))
+            lg.debug(str(self.difficulty))
             self.difficulties.append(self.difficulty)
 
             honest_win: int = 0
             selfish_win: int = 0
-            for _ in range(len(self.blockchain)):
-                if self.blockchain.pop().winning_agent.type == "selfish":
+            for i in range(len(self.blockchain)):
+                if self.blockchain.chain.pop().winning_agent.type == "selfish":
                     selfish_win += 1
                 else:
                     honest_win += 1
-            print(f"honest win: {honest_win}")
-            print(f"selfish win: {selfish_win}")
-            # print(self.blockchain)
+            lg.debug(f"honest win: {honest_win}")
+            lg.debug(f"selfish win: {selfish_win}")
+            lg.debug("_" * 40)
 
-            print("______________________")
+            self.selfish_blocks[period_index] = selfish_win
 
-        for _ in range(self.number_of_periods):
-            print("Period " + str(_) + " time: " + str(self.period_lengths[_]))
-            print("Orphans " + str(_) + " Selfish: " + str(self.orphan_blocks[_]["selfish"]))
-            print("Orphans " + str(_) + " Honest: " + str(self.orphan_blocks[_]["honest"]))
+        if self.display:
+            for i in range(self.number_of_periods):
+                print(
+                    "Period: " + str(i) + " | time: " + str(self.period_lengths[i]).rjust(5) + " | difficulty: " + str(
+                        self.difficulties[i]).rjust(5))
+                print("Orphans: " + "Selfish: " + str(self.orphan_blocks[i]["selfish"]).rjust(5))
+                print("Orphans: " + "Honest: " + str(self.orphan_blocks[i]["honest"]).rjust(5))
 
-            print("_____________________________________")
+                print("_" * 40)
 
-        result = Structure.Result.SimResult(periods=self.period_lengths, difficulties=self.difficulties,
-                                            agents=self.agents, orphan_blocks=self.orphan_blocks)
+        # reward leak & wasted power
+        print("🚰 Leaked Rewards: " + str(self.get_reward_leak()).rjust(2, " "))
+        print("🔋 Wasted Power: " + str(self.get_wasted_power()).rjust(12, " "))
+
+        SimResult(periods=self.period_lengths, difficulties=self.difficulties,
+                  agents=self.agents, orphan_blocks=self.orphan_blocks)
