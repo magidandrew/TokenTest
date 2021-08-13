@@ -1,4 +1,5 @@
 # from Structure.SmartAgent import SmartAgent
+import Structure.Result
 from Agents.AbstractAgent import AbstractAgent
 from Structure.Blockchain import Blockchain
 from Structure.BlocktimeOracle import BlocktimeOracle
@@ -19,6 +20,7 @@ class Simulator:
         self.blockchain: Blockchain = Blockchain()
         self.blocktime_oracle: BlocktimeOracle = BlocktimeOracle(agents=self.agents, difficulty=self.difficulty)
         self.orphan_blocks = {_: {"selfish": 0, "honest": 0} for _ in range(self.number_of_periods)}
+        self.difficulties: list[float] = []
 
     # this method sets instructions of what the agent will do when get_longest_published_chain is called
     def transmit_block_to_all_agents(self, payload: dict) -> None:
@@ -222,6 +224,7 @@ class Simulator:
             self.transmit_difficulty()
 
             print(str(self.difficulty))
+            self.difficulties.append(self.difficulty)
 
             honest_win: int = 0
             selfish_win: int = 0
@@ -242,3 +245,6 @@ class Simulator:
             print("Orphans " + str(_) + " Honest: " + str(self.orphan_blocks[_]["honest"]))
 
             print("_____________________________________")
+
+        result = Structure.Result.SimResult(periods=self.period_lengths, difficulties=self.difficulties,
+                                            agents=self.agents, orphan_blocks=self.orphan_blocks)
